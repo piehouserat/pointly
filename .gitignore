@@ -6,6 +6,7 @@ node_modules
 # Local env files
 .env
 .env.local
+.dev.vars
 .env.development.local
 .env.test.local
 .env.production.local
@@ -13,11 +14,15 @@ node_modules
 # Testing
 coverage
 
-# Turbo
-.turbo
+# Nx
+.nx/cache
+.nx/workspace-data
 
 # Vercel
 .vercel
+
+# Cloudflare Wrangler
+.wrangler
 
 # Build Outputs
 dist
@@ -32,3 +37,8 @@ npm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+
+
+.nx/cache
+.nx/workspace-data

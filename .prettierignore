@@ -1,6 +1,6 @@
 dist/
 node_modules/
-.turbo/
+.nx/
 .output/
 .nitro/
 .tanstack/

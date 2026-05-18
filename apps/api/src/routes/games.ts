@@ -1,14 +1,18 @@
 import { zValidator } from "@hono/zod-validator"
-import { db, games, players, stories } from "@pointly/db"
+import { games, players, stories } from "@pointly/db"
 import { asc, desc, eq } from "drizzle-orm"
 import { Hono } from "hono"
+import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
+import { param } from "@/lib/params"
+import type { AppEnv } from "@/types"
 import { createGameSchema, updateGameSchema } from "@/validators"
 import playersRoute from "./players"
 import storiesRoute from "./stories"
 
-const app = new Hono()
+const app = new Hono<AppEnv>()
   .get("/", async (c) => {
+    const db = getDb(c)
     const result = await db
       .select()
       .from(games)
@@ -17,17 +21,16 @@ const app = new Hono()
     return c.json(result)
   })
   .post("/", zValidator("json", createGameSchema), async (c) => {
+    const db = getDb(c)
     const body = c.req.valid("json")
 
-    const [game] = await db
-      .insert(games)
-      .values(body)
-      .returning()
+    const [game] = await db.insert(games).values(body).returning()
 
     return c.json(game, 201)
   })
   .get("/:gameId", async (c) => {
-    const { gameId } = c.req.param()
+    const db = getDb(c)
+    const gameId = param(c, "gameId")
 
     const [game] = await db
       .select()
@@ -55,7 +58,8 @@ const app = new Hono()
     return c.json({ ...game, players: gamePlayers, stories: gameStories })
   })
   .patch("/:gameId", zValidator("json", updateGameSchema), async (c) => {
-    const { gameId } = c.req.param()
+    const db = getDb(c)
+    const gameId = param(c, "gameId")
     const body = c.req.valid("json")
 
     const [game] = await db
@@ -71,12 +75,10 @@ const app = new Hono()
     return c.json(game)
   })
   .delete("/:gameId", async (c) => {
-    const { gameId } = c.req.param()
+    const db = getDb(c)
+    const gameId = param(c, "gameId")
 
-    const [game] = await db
-      .delete(games)
-      .where(eq(games.id, gameId))
-      .returning()
+    const [game] = await db.delete(games).where(eq(games.id, gameId)).returning()
 
     if (!game) {
       throw notFound("Game not found")
