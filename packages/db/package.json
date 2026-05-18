@@ -16,6 +16,7 @@
     "drizzle-orm": "^0.44.1"
   },
   "devDependencies": {
+    "dotenv": "^16.4.7",
     "@tanstack/eslint-config": "^0.3.0",
     "@types/node": "^25.1.0",
     "drizzle-kit": "^0.31.1",
