@@ -13,10 +13,7 @@ import storiesRoute from "./stories"
 const app = new Hono<AppEnv>()
   .get("/", async (c) => {
     const db = getDb(c)
-    const result = await db
-      .select()
-      .from(games)
-      .orderBy(desc(games.createdAt))
+    const result = await db.select().from(games).orderBy(desc(games.createdAt))
 
     return c.json(result)
   })
@@ -78,7 +75,10 @@ const app = new Hono<AppEnv>()
     const db = getDb(c)
     const gameId = param(c, "gameId")
 
-    const [game] = await db.delete(games).where(eq(games.id, gameId)).returning()
+    const [game] = await db
+      .delete(games)
+      .where(eq(games.id, gameId))
+      .returning()
 
     if (!game) {
       throw notFound("Game not found")

@@ -5,10 +5,10 @@
   "compatibility_date": "2026-05-18",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "dev": {
     "port": 4000,
-    "inspector_port": 9230
-  }
+    "inspector_port": 9230,
+  },
 }

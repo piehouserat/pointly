@@ -159,12 +159,8 @@
           "name": "players_game_id_games_id_fk",
           "tableFrom": "players",
           "tableTo": "games",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -252,12 +248,8 @@
           "name": "stories_game_id_games_id_fk",
           "tableFrom": "stories",
           "tableTo": "games",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -318,12 +310,8 @@
           "name": "votes_story_id_stories_id_fk",
           "tableFrom": "votes",
           "tableTo": "stories",
-          "columnsFrom": [
-            "story_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["story_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -331,12 +319,8 @@
           "name": "votes_player_id_players_id_fk",
           "tableFrom": "votes",
           "tableTo": "players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -346,10 +330,7 @@
         "unique_story_player_vote": {
           "name": "unique_story_player_vote",
           "nullsNotDistinct": false,
-          "columns": [
-            "story_id",
-            "player_id"
-          ]
+          "columns": ["story_id", "player_id"]
         }
       },
       "policies": {},
@@ -361,20 +342,12 @@
     "public.permission": {
       "name": "permission",
       "schema": "public",
-      "values": [
-        "all_players",
-        "host_only"
-      ]
+      "values": ["all_players", "host_only"]
     },
     "public.story_status": {
       "name": "story_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "voting",
-        "revealed",
-        "skipped"
-      ]
+      "values": ["pending", "voting", "revealed", "skipped"]
     },
     "public.voting_system": {
       "name": "voting_system",

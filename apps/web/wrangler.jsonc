@@ -5,9 +5,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "dev": {
-    "inspector_port": 9229
-  }
+    "inspector_port": 9229,
+  },
 }
