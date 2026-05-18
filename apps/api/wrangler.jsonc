@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "pointly-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "dev": {
+    "port": 4000,
+    "inspector_port": 9230
+  }
+}

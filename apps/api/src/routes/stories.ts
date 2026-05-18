@@ -1,14 +1,17 @@
 import { zValidator } from "@hono/zod-validator"
-import { db, games, stories } from "@pointly/db"
+import { games, stories } from "@pointly/db"
 import { asc, eq } from "drizzle-orm"
 import { Hono } from "hono"
+import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
+import type { AppEnv } from "@/types"
 import { createStorySchema, updateStorySchema } from "@/validators"
 import votesRoute from "./votes"
 
-const app = new Hono()
+const app = new Hono<AppEnv>()
   .get("/", async (c) => {
+    const db = getDb(c)
     const gameId = param(c, "gameId")
 
     const result = await db
@@ -20,6 +23,7 @@ const app = new Hono()
     return c.json(result)
   })
   .post("/", zValidator("json", createStorySchema), async (c) => {
+    const db = getDb(c)
     const gameId = param(c, "gameId")
     const body = c.req.valid("json")
 
@@ -41,6 +45,7 @@ const app = new Hono()
     return c.json(story, 201)
   })
   .get("/:storyId", async (c) => {
+    const db = getDb(c)
     const gameId = param(c, "gameId")
     const storyId = param(c, "storyId")
 
@@ -57,6 +62,7 @@ const app = new Hono()
     return c.json(story)
   })
   .patch("/:storyId", zValidator("json", updateStorySchema), async (c) => {
+    const db = getDb(c)
     const gameId = param(c, "gameId")
     const storyId = param(c, "storyId")
     const body = c.req.valid("json")
@@ -80,6 +86,7 @@ const app = new Hono()
     return c.json(story)
   })
   .delete("/:storyId", async (c) => {
+    const db = getDb(c)
     const gameId = param(c, "gameId")
     const storyId = param(c, "storyId")
 
