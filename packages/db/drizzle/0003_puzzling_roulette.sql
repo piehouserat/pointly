@@ -1,0 +1,1 @@
+ALTER TABLE "participants" DROP COLUMN "session_token";

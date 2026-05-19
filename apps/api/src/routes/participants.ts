@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { participants, rooms } from "@pointly/db"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
@@ -21,7 +21,35 @@ const app = new Hono<AppEnv>()
 
     return c.json(result)
   })
+  .get("/me", async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
+    const db = getDb(c)
+    const roomId = param(c, "roomId")
+
+    const [participant] = await db
+      .select()
+      .from(participants)
+      .where(
+        and(eq(participants.roomId, roomId), eq(participants.userId, user.id))
+      )
+      .limit(1)
+
+    if (!participant) {
+      return c.json({ error: "Participant not found" }, 404)
+    }
+
+    return c.json(participant)
+  })
   .post("/", zValidator("json", createParticipantSchema), async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
     const db = getDb(c)
     const roomId = param(c, "roomId")
     const body = c.req.valid("json")
@@ -36,12 +64,31 @@ const app = new Hono<AppEnv>()
       throw notFound("Room not found")
     }
 
+    const [existing] = await db
+      .select()
+      .from(participants)
+      .where(
+        and(eq(participants.roomId, roomId), eq(participants.userId, user.id))
+      )
+      .limit(1)
+
+    if (existing) {
+      return c.json(existing)
+    }
+
+    const [{ value: participantCount }] = await db
+      .select({ value: count() })
+      .from(participants)
+      .where(eq(participants.roomId, roomId))
+
     const [participant] = await db
       .insert(participants)
       .values({
-        ...body,
+        name: body.name,
+        isSpectator: body.isSpectator ?? false,
+        isHost: participantCount === 0,
         roomId,
-        sessionToken: crypto.randomUUID(),
+        userId: user.id,
       })
       .returning()
 
@@ -68,6 +115,11 @@ const app = new Hono<AppEnv>()
     "/:participantId",
     zValidator("json", updateParticipantSchema),
     async (c) => {
+      const user = c.get("user")
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401)
+      }
+
       const db = getDb(c)
       const roomId = param(c, "roomId")
       const participantId = param(c, "participantId")
@@ -83,6 +135,10 @@ const app = new Hono<AppEnv>()
         throw notFound("Participant not found")
       }
 
+      if (existing.userId !== user.id) {
+        return c.json({ error: "Forbidden" }, 403)
+      }
+
       const [participant] = await db
         .update(participants)
         .set(body)
@@ -93,6 +149,11 @@ const app = new Hono<AppEnv>()
     }
   )
   .delete("/:participantId", async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
     const db = getDb(c)
     const roomId = param(c, "roomId")
     const participantId = param(c, "participantId")
@@ -105,6 +166,10 @@ const app = new Hono<AppEnv>()
 
     if (!existing || existing.roomId !== roomId) {
       throw notFound("Participant not found")
+    }
+
+    if (existing.userId !== user.id) {
+      return c.json({ error: "Forbidden" }, 403)
     }
 
     await db.delete(participants).where(eq(participants.id, participantId))

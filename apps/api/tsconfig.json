@@ -14,7 +14,10 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pointly/auth": ["../../packages/auth/src/index.ts"],
+      "@pointly/db": ["../../packages/db/src/index.ts"],
+      "@pointly/db/schema": ["../../packages/db/src/schema.ts"]
     }
   },
   "include": ["src/**/*.ts"]

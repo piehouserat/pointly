@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@pointly/auth": "workspace:*",
     "@lonik/themer": "^0.5.4",
+    "better-auth": "^1.6.11",
     "@pointly/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "^1.32.0",

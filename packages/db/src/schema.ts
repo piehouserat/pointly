@@ -10,6 +10,10 @@ import {
   uuid,
 } from "drizzle-orm/pg-core"
 
+import { user } from "./auth-schema"
+
+export * from "./auth-schema"
+
 export const votingSystemEnum = pgEnum("voting_system", [
   "fibonacci",
   "t_shirt",
@@ -53,8 +57,8 @@ export const participants = pgTable("participants", {
   roomId: uuid("room_id")
     .notNull()
     .references(() => rooms.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  sessionToken: text("session_token").notNull(),
   isHost: boolean("is_host").notNull().default(false),
   isSpectator: boolean("is_spectator").notNull().default(false),
   joinedAt: timestamp("joined_at").notNull().defaultNow(),

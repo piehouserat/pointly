@@ -15,6 +15,20 @@
       "when": 1779142834964,
       "tag": "0001_fine_exodus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779151714482,
+      "tag": "0002_add_auth_and_participant_user",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779153616145,
+      "tag": "0003_puzzling_roulette",
+      "breakpoints": true
     }
   ]
 }

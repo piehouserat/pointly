@@ -1,12 +1,21 @@
+import type { Auth } from "@pointly/auth"
 import type { Db } from "@pointly/db"
 
 export type Bindings = {
   DATABASE_URL: string
   CORS_ORIGIN?: string
+  BETTER_AUTH_SECRET: string
+  BETTER_AUTH_URL: string
 }
+
+export type AuthUser = Auth["$Infer"]["Session"]["user"]
+export type AuthSession = Auth["$Infer"]["Session"]["session"]
 
 export type Variables = {
   db: Db
+  auth: Auth
+  user: AuthUser | null
+  session: AuthSession | null
 }
 
 export type AppEnv = {
