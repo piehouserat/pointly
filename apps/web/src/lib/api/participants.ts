@@ -51,3 +51,22 @@ export async function joinRoom(input: {
 
   return response.json() as Promise<Participant>
 }
+
+export async function updateMyParticipant(
+  roomId: string,
+  input: { name?: string; isSpectator?: boolean }
+): Promise<Participant> {
+  const response = await apiFetch(`/rooms/${roomId}/participants/me`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
+    throw new Error(body?.error ?? "Failed to update participant")
+  }
+
+  return response.json() as Promise<Participant>
+}

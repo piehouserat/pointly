@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NewGameRouteImport } from './routes/new-game'
+import { Route as RoomsRouteRouteImport } from './routes/rooms/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 
@@ -18,45 +19,53 @@ const NewGameRoute = NewGameRouteImport.update({
   path: '/new-game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsRouteRoute = RoomsRouteRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
-  id: '/rooms/$roomId',
-  path: '/rooms/$roomId',
-  getParentRoute: () => rootRouteImport,
+  id: '/$roomId',
+  path: '/$roomId',
+  getParentRoute: () => RoomsRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rooms': typeof RoomsRouteRouteWithChildren
   '/new-game': typeof NewGameRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rooms': typeof RoomsRouteRouteWithChildren
   '/new-game': typeof NewGameRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rooms': typeof RoomsRouteRouteWithChildren
   '/new-game': typeof NewGameRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/new-game' | '/rooms/$roomId'
+  fullPaths: '/' | '/rooms' | '/new-game' | '/rooms/$roomId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/new-game' | '/rooms/$roomId'
-  id: '__root__' | '/' | '/new-game' | '/rooms/$roomId'
+  to: '/' | '/rooms' | '/new-game' | '/rooms/$roomId'
+  id: '__root__' | '/' | '/rooms' | '/new-game' | '/rooms/$roomId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RoomsRouteRoute: typeof RoomsRouteRouteWithChildren
   NewGameRoute: typeof NewGameRoute
-  RoomsRoomIdRoute: typeof RoomsRoomIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,6 +77,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewGameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -77,18 +93,30 @@ declare module '@tanstack/react-router' {
     }
     '/rooms/$roomId': {
       id: '/rooms/$roomId'
-      path: '/rooms/$roomId'
+      path: '/$roomId'
       fullPath: '/rooms/$roomId'
       preLoaderRoute: typeof RoomsRoomIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RoomsRouteRoute
     }
   }
 }
 
+interface RoomsRouteRouteChildren {
+  RoomsRoomIdRoute: typeof RoomsRoomIdRoute
+}
+
+const RoomsRouteRouteChildren: RoomsRouteRouteChildren = {
+  RoomsRoomIdRoute: RoomsRoomIdRoute,
+}
+
+const RoomsRouteRouteWithChildren = RoomsRouteRoute._addFileChildren(
+  RoomsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RoomsRouteRoute: RoomsRouteRouteWithChildren,
   NewGameRoute: NewGameRoute,
-  RoomsRoomIdRoute: RoomsRoomIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

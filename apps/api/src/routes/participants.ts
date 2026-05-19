@@ -5,6 +5,7 @@ import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
+import { requireRoomParticipant } from "@/lib/participant"
 import type { AppEnv } from "@/types"
 import { createParticipantSchema, updateParticipantSchema } from "@/validators"
 
@@ -22,27 +23,32 @@ const app = new Hono<AppEnv>()
     return c.json(result)
   })
   .get("/me", async (c) => {
-    const user = c.get("user")
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401)
-    }
-
+    const roomId = param(c, "roomId")
+    const participant = await requireRoomParticipant(c, roomId)
+    return c.json(participant)
+  })
+  .patch("/me", zValidator("json", updateParticipantSchema), async (c) => {
     const db = getDb(c)
     const roomId = param(c, "roomId")
+    const body = c.req.valid("json")
+    const existing = await requireRoomParticipant(c, roomId)
 
     const [participant] = await db
-      .select()
-      .from(participants)
-      .where(
-        and(eq(participants.roomId, roomId), eq(participants.userId, user.id))
-      )
-      .limit(1)
-
-    if (!participant) {
-      return c.json({ error: "Participant not found" }, 404)
-    }
+      .update(participants)
+      .set(body)
+      .where(eq(participants.id, existing.id))
+      .returning()
 
     return c.json(participant)
+  })
+  .delete("/me", async (c) => {
+    const db = getDb(c)
+    const roomId = param(c, "roomId")
+    const existing = await requireRoomParticipant(c, roomId)
+
+    await db.delete(participants).where(eq(participants.id, existing.id))
+
+    return c.body(null, 204)
   })
   .post("/", zValidator("json", createParticipantSchema), async (c) => {
     const user = c.get("user")
@@ -110,71 +116,6 @@ const app = new Hono<AppEnv>()
     }
 
     return c.json(participant)
-  })
-  .patch(
-    "/:participantId",
-    zValidator("json", updateParticipantSchema),
-    async (c) => {
-      const user = c.get("user")
-      if (!user) {
-        return c.json({ error: "Unauthorized" }, 401)
-      }
-
-      const db = getDb(c)
-      const roomId = param(c, "roomId")
-      const participantId = param(c, "participantId")
-      const body = c.req.valid("json")
-
-      const [existing] = await db
-        .select()
-        .from(participants)
-        .where(eq(participants.id, participantId))
-        .limit(1)
-
-      if (!existing || existing.roomId !== roomId) {
-        throw notFound("Participant not found")
-      }
-
-      if (existing.userId !== user.id) {
-        return c.json({ error: "Forbidden" }, 403)
-      }
-
-      const [participant] = await db
-        .update(participants)
-        .set(body)
-        .where(eq(participants.id, participantId))
-        .returning()
-
-      return c.json(participant)
-    }
-  )
-  .delete("/:participantId", async (c) => {
-    const user = c.get("user")
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401)
-    }
-
-    const db = getDb(c)
-    const roomId = param(c, "roomId")
-    const participantId = param(c, "participantId")
-
-    const [existing] = await db
-      .select()
-      .from(participants)
-      .where(eq(participants.id, participantId))
-      .limit(1)
-
-    if (!existing || existing.roomId !== roomId) {
-      throw notFound("Participant not found")
-    }
-
-    if (existing.userId !== user.id) {
-      return c.json({ error: "Forbidden" }, 403)
-    }
-
-    await db.delete(participants).where(eq(participants.id, participantId))
-
-    return c.body(null, 204)
   })
 
 export default app

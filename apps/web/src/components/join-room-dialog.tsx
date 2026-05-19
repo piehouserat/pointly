@@ -3,9 +3,9 @@ import { Smile } from "lucide-react"
 import { useState } from "react"
 import { z } from "zod"
 
-import { joinRoom, type Participant } from "@/lib/api/participants"
+import { joinRoom } from "@/lib/api/participants"
+import type { Participant } from "@/lib/api/participants"
 import { authClient } from "@/lib/auth-client"
-import { setStoredParticipantId } from "@/lib/participant-storage"
 import { Button } from "@pointly/ui/components/button"
 import {
   Dialog,
@@ -37,7 +37,11 @@ type JoinRoomDialogProps = {
   onJoined: (participant: Participant) => void
 }
 
-export function JoinRoomDialog({ roomId, open, onJoined }: JoinRoomDialogProps) {
+export function JoinRoomDialog({
+  roomId,
+  open,
+  onJoined,
+}: JoinRoomDialogProps) {
   const session = authClient.useSession()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -65,7 +69,6 @@ export function JoinRoomDialog({ roomId, open, onJoined }: JoinRoomDialogProps) 
           isSpectator: value.isSpectator,
         })
 
-        setStoredParticipantId(roomId, participant.id)
         onJoined(participant)
         await session.refetch()
       } catch (error) {
@@ -97,18 +100,23 @@ export function JoinRoomDialog({ roomId, open, onJoined }: JoinRoomDialogProps) 
             <form.Field name="name">
               {(field) => {
                 const isInvalid =
-                  field.state.meta.isTouched && field.state.meta.errors.length > 0
+                  field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0
 
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Your display name</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      Your display name
+                    </FieldLabel>
                     <div className="relative">
                       <Input
                         id={field.name}
                         name={field.name}
                         value={field.state.value}
                         onBlur={field.handleBlur}
-                        onChange={(event) => field.handleChange(event.target.value)}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
                         aria-invalid={isInvalid}
                         autoComplete="off"
                         className="pr-9"
@@ -146,7 +154,12 @@ export function JoinRoomDialog({ roomId, open, onJoined }: JoinRoomDialogProps) 
 
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
-              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? <Spinner data-icon="inline-start" /> : null}
                 Continue to game
               </Button>
