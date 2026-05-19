@@ -30,7 +30,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@pointly/ui/*": ["../../packages/ui/src/*"]
+      "@pointly/ui/*": ["../../packages/ui/src/*"],
+      "@pointly/auth": ["../../packages/auth/src/index.ts"],
+      "@pointly/auth/client": ["../../packages/auth/src/client.ts"]
     }
   }
 }

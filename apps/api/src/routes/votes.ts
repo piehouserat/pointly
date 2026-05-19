@@ -33,6 +33,11 @@ const app = new Hono<AppEnv>()
     return c.json(result)
   })
   .post("/", zValidator("json", castVoteSchema), async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
     const db = getDb(c)
     const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
@@ -68,6 +73,10 @@ const app = new Hono<AppEnv>()
       throw notFound("Participant not found")
     }
 
+    if (participant.userId !== user.id) {
+      return c.json({ error: "Forbidden" }, 403)
+    }
+
     if (participant.isSpectator) {
       return c.json({ error: "Spectators cannot vote" }, 403)
     }
@@ -84,6 +93,11 @@ const app = new Hono<AppEnv>()
     return c.json(vote, 201)
   })
   .patch("/:voteId", zValidator("json", updateVoteSchema), async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
     const db = getDb(c)
     const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
@@ -93,6 +107,21 @@ const app = new Hono<AppEnv>()
 
     if (!participantId) {
       return c.json({ error: "x-participant-id header is required" }, 400)
+    }
+
+    const [voter] = await db
+      .select()
+      .from(participants)
+      .where(
+        and(
+          eq(participants.id, participantId),
+          eq(participants.roomId, roomId)
+        )
+      )
+      .limit(1)
+
+    if (!voter || voter.userId !== user.id) {
+      return c.json({ error: "Forbidden" }, 403)
     }
 
     const [story] = await db
@@ -128,6 +157,11 @@ const app = new Hono<AppEnv>()
     return c.json(vote)
   })
   .delete("/:voteId", async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
+
     const db = getDb(c)
     const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
@@ -136,6 +170,21 @@ const app = new Hono<AppEnv>()
 
     if (!participantId) {
       return c.json({ error: "x-participant-id header is required" }, 400)
+    }
+
+    const [voter] = await db
+      .select()
+      .from(participants)
+      .where(
+        and(
+          eq(participants.id, participantId),
+          eq(participants.roomId, roomId)
+        )
+      )
+      .limit(1)
+
+    if (!voter || voter.userId !== user.id) {
+      return c.json({ error: "Forbidden" }, 403)
     }
 
     const [story] = await db
