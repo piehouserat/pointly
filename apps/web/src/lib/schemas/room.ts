@@ -38,7 +38,7 @@ export type Room = {
   id: string
   name: string
   votingSystem: z.infer<typeof votingSystemSchema>
-  customDeck: string[] | null
+  customDeck: Array<string> | null
   whoCanReveal: z.infer<typeof permissionSchema>
   whoCanManageIssues: z.infer<typeof permissionSchema>
   autoReveal: boolean

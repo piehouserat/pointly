@@ -24,7 +24,7 @@ export type RoomWithRelations = Room & {
     isHost: boolean
     isSpectator: boolean
   }>
-  stories: unknown[]
+  stories: Array<unknown>
 }
 
 export async function fetchRoom(roomId: string): Promise<RoomWithRelations> {
@@ -38,4 +38,23 @@ export async function fetchRoom(roomId: string): Promise<RoomWithRelations> {
   }
 
   return response.json() as Promise<RoomWithRelations>
+}
+
+export async function updateRoom(
+  roomId: string,
+  input: Partial<CreateRoomFormValues>
+): Promise<Room> {
+  const response = await apiFetch(`/rooms/${roomId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
+    throw new Error(body?.error ?? "Failed to update room")
+  }
+
+  return response.json() as Promise<Room>
 }
