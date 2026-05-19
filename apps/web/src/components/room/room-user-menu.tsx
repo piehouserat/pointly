@@ -3,10 +3,12 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
+  Monitor,
   Moon,
   Pencil,
   Shield,
   Sun,
+  SunMoon,
   UserPlus,
 } from "lucide-react"
 import { useState } from "react"
@@ -24,9 +26,23 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@pointly/ui/components/dropdown-menu"
+
+const themeOptions = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+] as const
+
+type ThemeValue = (typeof themeOptions)[number]["value"]
+
 type RoomUserMenuProps = {
   roomId: string
   participant: Participant
@@ -40,6 +56,10 @@ export function RoomUserMenu({
 }: RoomUserMenuProps) {
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
+  const currentTheme: ThemeValue =
+    themeOptions.some((option) => option.value === theme) ?
+      (theme as ThemeValue)
+    : "system"
   const [isUpdating, setIsUpdating] = useState(false)
 
   async function toggleSpectator(checked: boolean) {
@@ -98,15 +118,29 @@ export function RoomUserMenu({
         >
           Spectator mode
         </DropdownMenuCheckboxItem>
-        <DropdownMenuItem
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <Moon data-icon="inline-start" />
-          Appearance
-          <span className="ml-auto text-xs text-muted-foreground">
-            {theme === "dark" ? <Sun /> : <Moon />}
-          </span>
-        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <SunMoon data-icon="inline-start" />
+            Appearance
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup
+              value={currentTheme}
+              onValueChange={(value) => {
+                if (value) {
+                  setTheme(value as ThemeValue)
+                }
+              }}
+            >
+              {themeOptions.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  <option.icon data-icon="inline-start" />
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled>
           <LogIn data-icon="inline-start" />

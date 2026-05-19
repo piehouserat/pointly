@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react"
 import { JoinRoomDialog } from "@/components/join-room-dialog"
 import { RoomPreview } from "@/components/room/room-preview"
 import { RoomShell } from "@/components/room/room-shell"
-import { fetchMyParticipant, type Participant } from "@/lib/api/participants"
-import { fetchRoom, type RoomWithRelations } from "@/lib/api/rooms"
+import { fetchMyParticipant } from '@/lib/api/participants';
+import type { Participant } from '@/lib/api/participants';
+import { fetchRoom } from '@/lib/api/rooms';
+import type { RoomWithRelations } from '@/lib/api/rooms';
 import { Spinner } from "@pointly/ui/components/spinner"
 
 export const Route = createFileRoute("/rooms/$roomId")({
