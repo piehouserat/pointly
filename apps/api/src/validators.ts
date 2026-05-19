@@ -17,7 +17,7 @@ export const storyStatusSchema = z.enum([
   "skipped",
 ])
 
-export const createGameSchema = z.object({
+export const createRoomSchema = z.object({
   name: z.string().min(1).max(200),
   votingSystem: votingSystemSchema.optional(),
   customDeck: z.array(z.string()).optional(),
@@ -29,15 +29,15 @@ export const createGameSchema = z.object({
   showCountdown: z.boolean().optional(),
 })
 
-export const updateGameSchema = createGameSchema.partial()
+export const updateRoomSchema = createRoomSchema.partial()
 
-export const createPlayerSchema = z.object({
+export const createParticipantSchema = z.object({
   name: z.string().min(1).max(100),
   isHost: z.boolean().optional(),
   isSpectator: z.boolean().optional(),
 })
 
-export const updatePlayerSchema = z.object({
+export const updateParticipantSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   isSpectator: z.boolean().optional(),
 })

@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator"
-import { players, stories, votes } from "@pointly/db"
+import { participants, stories, votes } from "@pointly/db"
 import { and, asc, eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { getDb } from "@/lib/db"
@@ -11,7 +11,7 @@ import { castVoteSchema, updateVoteSchema } from "@/validators"
 const app = new Hono<AppEnv>()
   .get("/", async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
 
     const [story] = await db
@@ -20,7 +20,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!story || story.gameId !== gameId) {
+    if (!story || story.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
@@ -34,13 +34,13 @@ const app = new Hono<AppEnv>()
   })
   .post("/", zValidator("json", castVoteSchema), async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
     const body = c.req.valid("json")
-    const playerId = c.req.header("x-player-id")
+    const participantId = c.req.header("x-participant-id")
 
-    if (!playerId) {
-      return c.json({ error: "x-player-id header is required" }, 400)
+    if (!participantId) {
+      return c.json({ error: "x-participant-id header is required" }, 400)
     }
 
     const [story] = await db
@@ -49,29 +49,34 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!story || story.gameId !== gameId) {
+    if (!story || story.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
-    const [player] = await db
+    const [participant] = await db
       .select()
-      .from(players)
-      .where(and(eq(players.id, playerId), eq(players.gameId, gameId)))
+      .from(participants)
+      .where(
+        and(
+          eq(participants.id, participantId),
+          eq(participants.roomId, roomId)
+        )
+      )
       .limit(1)
 
-    if (!player) {
-      throw notFound("Player not found")
+    if (!participant) {
+      throw notFound("Participant not found")
     }
 
-    if (player.isSpectator) {
+    if (participant.isSpectator) {
       return c.json({ error: "Spectators cannot vote" }, 403)
     }
 
     const [vote] = await db
       .insert(votes)
-      .values({ storyId, playerId, value: body.value })
+      .values({ storyId, participantId, value: body.value })
       .onConflictDoUpdate({
-        target: [votes.storyId, votes.playerId],
+        target: [votes.storyId, votes.participantId],
         set: { value: body.value, updatedAt: new Date() },
       })
       .returning()
@@ -80,14 +85,14 @@ const app = new Hono<AppEnv>()
   })
   .patch("/:voteId", zValidator("json", updateVoteSchema), async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
     const voteId = param(c, "voteId")
     const body = c.req.valid("json")
-    const playerId = c.req.header("x-player-id")
+    const participantId = c.req.header("x-participant-id")
 
-    if (!playerId) {
-      return c.json({ error: "x-player-id header is required" }, 400)
+    if (!participantId) {
+      return c.json({ error: "x-participant-id header is required" }, 400)
     }
 
     const [story] = await db
@@ -96,7 +101,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!story || story.gameId !== gameId) {
+    if (!story || story.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
@@ -110,7 +115,7 @@ const app = new Hono<AppEnv>()
       throw notFound("Vote not found")
     }
 
-    if (existing.playerId !== playerId) {
+    if (existing.participantId !== participantId) {
       return c.json({ error: "You can only update your own vote" }, 403)
     }
 
@@ -124,13 +129,13 @@ const app = new Hono<AppEnv>()
   })
   .delete("/:voteId", async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
     const voteId = param(c, "voteId")
-    const playerId = c.req.header("x-player-id")
+    const participantId = c.req.header("x-participant-id")
 
-    if (!playerId) {
-      return c.json({ error: "x-player-id header is required" }, 400)
+    if (!participantId) {
+      return c.json({ error: "x-participant-id header is required" }, 400)
     }
 
     const [story] = await db
@@ -139,7 +144,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!story || story.gameId !== gameId) {
+    if (!story || story.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
@@ -153,7 +158,7 @@ const app = new Hono<AppEnv>()
       throw notFound("Vote not found")
     }
 
-    if (existing.playerId !== playerId) {
+    if (existing.participantId !== participantId) {
       return c.json({ error: "You can only delete your own vote" }, 403)
     }
 

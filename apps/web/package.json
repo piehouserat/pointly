@@ -14,16 +14,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@lonik/themer": "^0.5.4",
+    "@pointly/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-form": "^1.32.0",
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
-    "@pointly/ui": "workspace:*",
+    "@tanstack/zod-form-adapter": "^0.42.1",
     "lucide-react": "^1.16.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.25.0",
