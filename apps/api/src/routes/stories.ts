@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator"
-import { games, stories } from "@pointly/db"
+import { rooms, stories } from "@pointly/db"
 import { asc, eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { getDb } from "@/lib/db"
@@ -12,41 +12,41 @@ import votesRoute from "./votes"
 const app = new Hono<AppEnv>()
   .get("/", async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
 
     const result = await db
       .select()
       .from(stories)
-      .where(eq(stories.gameId, gameId))
+      .where(eq(stories.roomId, roomId))
       .orderBy(asc(stories.order), asc(stories.createdAt))
 
     return c.json(result)
   })
   .post("/", zValidator("json", createStorySchema), async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const body = c.req.valid("json")
 
-    const [game] = await db
-      .select({ id: games.id })
-      .from(games)
-      .where(eq(games.id, gameId))
+    const [room] = await db
+      .select({ id: rooms.id })
+      .from(rooms)
+      .where(eq(rooms.id, roomId))
       .limit(1)
 
-    if (!game) {
-      throw notFound("Game not found")
+    if (!room) {
+      throw notFound("Room not found")
     }
 
     const [story] = await db
       .insert(stories)
-      .values({ ...body, gameId })
+      .values({ ...body, roomId })
       .returning()
 
     return c.json(story, 201)
   })
   .get("/:storyId", async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
 
     const [story] = await db
@@ -55,7 +55,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!story || story.gameId !== gameId) {
+    if (!story || story.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
@@ -63,7 +63,7 @@ const app = new Hono<AppEnv>()
   })
   .patch("/:storyId", zValidator("json", updateStorySchema), async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
     const body = c.req.valid("json")
 
@@ -73,7 +73,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!existing || existing.gameId !== gameId) {
+    if (!existing || existing.roomId !== roomId) {
       throw notFound("Story not found")
     }
 
@@ -87,7 +87,7 @@ const app = new Hono<AppEnv>()
   })
   .delete("/:storyId", async (c) => {
     const db = getDb(c)
-    const gameId = param(c, "gameId")
+    const roomId = param(c, "roomId")
     const storyId = param(c, "storyId")
 
     const [existing] = await db
@@ -96,7 +96,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .limit(1)
 
-    if (!existing || existing.gameId !== gameId) {
+    if (!existing || existing.roomId !== roomId) {
       throw notFound("Story not found")
     }
 

@@ -27,7 +27,7 @@ export const storyStatusEnum = pgEnum("story_status", [
   "skipped",
 ])
 
-export const games = pgTable("games", {
+export const rooms = pgTable("rooms", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   votingSystem: votingSystemEnum("voting_system")
@@ -48,11 +48,11 @@ export const games = pgTable("games", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
-export const players = pgTable("players", {
+export const participants = pgTable("participants", {
   id: uuid("id").primaryKey().defaultRandom(),
-  gameId: uuid("game_id")
+  roomId: uuid("room_id")
     .notNull()
-    .references(() => games.id, { onDelete: "cascade" }),
+    .references(() => rooms.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   sessionToken: text("session_token").notNull(),
   isHost: boolean("is_host").notNull().default(false),
@@ -62,9 +62,9 @@ export const players = pgTable("players", {
 
 export const stories = pgTable("stories", {
   id: uuid("id").primaryKey().defaultRandom(),
-  gameId: uuid("game_id")
+  roomId: uuid("room_id")
     .notNull()
-    .references(() => games.id, { onDelete: "cascade" }),
+    .references(() => rooms.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   url: text("url"),
@@ -82,22 +82,25 @@ export const votes = pgTable(
     storyId: uuid("story_id")
       .notNull()
       .references(() => stories.id, { onDelete: "cascade" }),
-    playerId: uuid("player_id")
+    participantId: uuid("participant_id")
       .notNull()
-      .references(() => players.id, { onDelete: "cascade" }),
+      .references(() => participants.id, { onDelete: "cascade" }),
     value: text("value").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    unique("unique_story_player_vote").on(table.storyId, table.playerId),
+    unique("unique_story_participant_vote").on(
+      table.storyId,
+      table.participantId
+    ),
   ]
 )
 
-export type Game = typeof games.$inferSelect
-export type NewGame = typeof games.$inferInsert
-export type Player = typeof players.$inferSelect
-export type NewPlayer = typeof players.$inferInsert
+export type Room = typeof rooms.$inferSelect
+export type NewRoom = typeof rooms.$inferInsert
+export type Participant = typeof participants.$inferSelect
+export type NewParticipant = typeof participants.$inferInsert
 export type Story = typeof stories.$inferSelect
 export type NewStory = typeof stories.$inferInsert
 export type Vote = typeof votes.$inferSelect
