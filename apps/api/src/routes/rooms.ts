@@ -8,7 +8,9 @@ import { param } from "@/lib/params"
 import type { AppEnv } from "@/types"
 import { createRoomSchema, updateRoomSchema } from "@/validators"
 import participantsRoute from "./participants"
+import stateRoute from "./state"
 import storiesRoute from "./stories"
+import votingRoute from "./voting"
 
 const app = new Hono<AppEnv>()
   .get("/", async (c) => {
@@ -91,6 +93,8 @@ const app = new Hono<AppEnv>()
     return c.body(null, 204)
   })
   .route("/:roomId/participants", participantsRoute)
+  .route("/:roomId/state", stateRoute)
+  .route("/:roomId/voting", votingRoute)
   .route("/:roomId/stories", storiesRoute)
 
 export default app

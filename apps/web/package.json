@@ -14,9 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@pointly/auth": "workspace:*",
     "@lonik/themer": "^0.5.4",
-    "better-auth": "^1.6.11",
+    "@pointly/auth": "workspace:*",
     "@pointly/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "^1.32.0",
@@ -24,7 +23,9 @@
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
     "@tanstack/zod-form-adapter": "^0.42.1",
+    "better-auth": "^1.6.11",
     "lucide-react": "^1.16.0",
+    "motion": "^12.39.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18",

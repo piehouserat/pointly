@@ -1,6 +1,6 @@
 import type { Room } from "@/lib/schemas/room"
 
-export const votingDecks: Record<Room["votingSystem"], string[]> = {
+export const votingDecks: Record<Room["votingSystem"], Array<string>> = {
   fibonacci: ["0", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "?", "☕"],
   t_shirt: ["XS", "S", "M", "L", "XL", "XXL", "?", "☕"],
   powers_of_two: ["0", "1", "2", "4", "8", "16", "32", "64", "?", "☕"],
