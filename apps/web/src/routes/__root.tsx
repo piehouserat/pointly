@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import { ThemeProvider } from "@lonik/themer"
 
 import appCss from "@pointly/ui/globals.css?url"
+import { TooltipProvider } from "@pointly/ui/components/tooltip"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -41,7 +42,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" enableSystem>
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
         <Scripts />
       </body>
