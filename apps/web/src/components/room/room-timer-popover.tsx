@@ -70,7 +70,7 @@ function TimerUnit({ value, label, max, disabled, onChange }: TimerUnitProps) {
           onChange(Number.isNaN(next) ? 0 : clamp(next, 0, max))
         }}
         className={cn(
-          "h-16 w-18 rounded-lg bg-muted text-center text-3xl font-semibold tabular-nums text-foreground shadow-xs outline-none",
+          "h-16 w-18 rounded-lg bg-muted text-center text-3xl font-semibold text-foreground tabular-nums shadow-xs outline-none",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           "disabled:cursor-not-allowed disabled:opacity-70",
           "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -104,12 +104,21 @@ function RoomTimerSetupPopover() {
 
   return (
     <Popover>
-      <PopoverTrigger
-        render={<Button variant="ghost" size="icon" />}
-        title="Timer"
-      >
-        <Timer />
-      </PopoverTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger
+              render={<Button variant="ghost" size="icon" />}
+              aria-label="Timer"
+            />
+          }
+        >
+          <Timer />
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6}>
+          Timer
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent align="end" className="w-80">
         <PopoverHeader>
           <PopoverTitle>Timer</PopoverTitle>
@@ -146,7 +155,10 @@ function RoomTimerSetupPopover() {
               round.
             </FieldDescription>
           </FieldContent>
-          <Switch checked={resetEachRound} onCheckedChange={setResetEachRound} />
+          <Switch
+            checked={resetEachRound}
+            onCheckedChange={setResetEachRound}
+          />
         </Field>
 
         <Button
@@ -154,9 +166,11 @@ function RoomTimerSetupPopover() {
           disabled={!canStart && status !== "expired"}
           onClick={startOrPause}
         >
-          {isRunning ?
+          {isRunning ? (
             <Pause data-icon="inline-start" />
-          : <Play data-icon="inline-start" />}
+          ) : (
+            <Play data-icon="inline-start" />
+          )}
           {isRunning ? "Pause" : status === "expired" ? "Restart" : "Start"}
         </Button>
       </PopoverContent>
@@ -192,10 +206,7 @@ function RoomTimerActiveMenu() {
         >
           <TimerCountdownChart progress={progress} />
         </TooltipTrigger>
-        <TooltipContent
-          side="bottom"
-          className="border-0 bg-muted px-2.5 py-1 text-sm font-medium text-foreground tabular-nums shadow-md ring-1 ring-foreground/10 [&_[class*='Arrow']]:hidden"
-        >
+        <TooltipContent side="bottom" sideOffset={6}>
           {remainingLabel}
         </TooltipContent>
       </Tooltip>
