@@ -4,10 +4,12 @@
   "compatibility_date": "2026-05-18",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  "workers_dev": true,
+  "preview_urls": true,
   "observability": {
-    "enabled": true,
+    "enabled": true
   },
   "dev": {
-    "inspector_port": 9229,
-  },
+    "inspector_port": 9229
+  }
 }
