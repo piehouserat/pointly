@@ -12,7 +12,6 @@
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@pointly/auth": ["../../packages/auth/src/index.ts"],
