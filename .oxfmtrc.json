@@ -11,6 +11,14 @@
     "functions": ["cn", "cva"]
   },
   "sortPackageJson": false,
+  "overrides": [
+    {
+      "files": ["**/wrangler.jsonc"],
+      "options": {
+        "trailingComma": "none"
+      }
+    }
+  ],
   "ignorePatterns": [
     "dist/",
     "node_modules/",
