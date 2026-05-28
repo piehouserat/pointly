@@ -6,10 +6,27 @@
   "main": "@tanstack/react-start/server-entry",
   "workers_dev": true,
   "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "point-ly.com/*",
+      "zone_name": "point-ly.com"
+    }
+  ],
   "observability": {
     "enabled": true
   },
   "dev": {
     "inspector_port": 9229
+  },
+  "vars": {
+    "VITE_API_URL": "https://api.point-ly.com"
+  },
+  "env": {
+    "development": {
+      "preview_urls": true,
+      "vars": {
+        "VITE_API_URL": "http://localhost:4000"
+      }
+    }
   }
 }

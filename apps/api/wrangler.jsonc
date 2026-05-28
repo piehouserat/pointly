@@ -6,11 +6,30 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "api.point-ly.com/*",
+      "zone_name": "point-ly.com"
+    }
+  ],
   "observability": {
     "enabled": true
   },
   "dev": {
     "port": 4000,
     "inspector_port": 9230
+  },
+  "vars": {
+    "CORS_ORIGIN": "https://point-ly.com",
+    "BETTER_AUTH_URL": "https://api.point-ly.com"
+  },
+  "env": {
+    "development": {
+      "preview_urls": true,
+      "vars": {
+        "CORS_ORIGIN": "http://localhost:3000",
+        "BETTER_AUTH_URL": "http://localhost:4000"
+      }
+    }
   }
 }
