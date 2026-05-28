@@ -23,6 +23,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-timer-progress: var(--timer-progress);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -75,6 +76,7 @@
   --chart-3: oklch(0.75 0.12 277);
   --chart-4: oklch(0.45 0.18 277);
   --chart-5: oklch(0.35 0.12 277);
+  --timer-progress: oklch(0.72 0.15 162);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0.01 277);
   --sidebar-foreground: oklch(0.145 0.02 264);
@@ -110,6 +112,7 @@
   --chart-3: oklch(0.585 0.233 277);
   --chart-4: oklch(0.45 0.18 277);
   --chart-5: oklch(0.35 0.12 277);
+  --timer-progress: oklch(0.78 0.14 162);
   --sidebar: oklch(0.26 0.025 264);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.627 0.214 277);

@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router"
-import { PanelRight, Timer, UserPlus } from "lucide-react"
+import { PanelRight, UserPlus } from "lucide-react"
 
 import { RoomGameMenu } from "@/components/room/room-game-menu"
+import { RoomTimerPopover } from "@/components/room/room-timer-popover"
 import { RoomUserMenu } from "@/components/room/room-user-menu"
 import type { Participant } from "@/lib/api/participants"
 import type { RoomWithRelations } from "@/lib/api/rooms"
@@ -39,14 +40,7 @@ export function RoomHeader({
       />
 
       <div className="ml-auto flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled
-          title="Timer (coming soon)"
-        >
-          <Timer />
-        </Button>
+        <RoomTimerPopover />
 
         <RoomUserMenu
           roomId={room.id}
