@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { fetchStories, type Story } from "@/lib/api/stories"
 
-const pollMs = 2000
-
+/** One-shot stories fetch (no polling). Prefer `useRoomRealtime` in the room UI. */
 export function useStories(roomId: string, enabled = true) {
   const [stories, setStories] = useState<Array<Story>>([])
   const [error, setError] = useState<string | null>(null)
@@ -14,8 +13,10 @@ export function useStories(roomId: string, enabled = true) {
       const next = await fetchStories(roomId)
       setStories(next)
       setError(null)
+      return next
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load stories")
+      throw err
     } finally {
       setIsLoading(false)
     }
@@ -24,8 +25,6 @@ export function useStories(roomId: string, enabled = true) {
   useEffect(() => {
     if (!enabled) return
     void refresh()
-    const id = window.setInterval(() => void refresh(), pollMs)
-    return () => window.clearInterval(id)
   }, [enabled, refresh])
 
   return { stories, error, isLoading, refresh, setStories }

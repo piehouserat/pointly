@@ -15,6 +15,20 @@
   "observability": {
     "enabled": true
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ROOM_REALTIME",
+        "class_name": "RoomRealtime"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RoomRealtime"]
+    }
+  ],
   "dev": {
     "port": 4000,
     "inspector_port": 9230

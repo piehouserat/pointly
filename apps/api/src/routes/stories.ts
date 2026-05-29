@@ -5,6 +5,7 @@ import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
+import { notifyRoomAndStories, notifyStories } from "@/lib/realtime/notify"
 import { backfillStoryEstimates } from "@/lib/voting"
 import type { AppEnv } from "@/types"
 import { createStorySchema, updateStorySchema } from "@/validators"
@@ -42,6 +43,8 @@ const app = new Hono<AppEnv>()
       .insert(stories)
       .values({ ...body, roomId })
       .returning()
+
+    await notifyStories(c.env, roomId)
 
     return c.json(story, 201)
   })
@@ -84,6 +87,12 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.id, storyId))
       .returning()
 
+    if (body.status !== undefined) {
+      await notifyRoomAndStories(c.env, roomId)
+    } else {
+      await notifyStories(c.env, roomId)
+    }
+
     return c.json(story)
   })
   .delete("/:storyId", async (c) => {
@@ -102,6 +111,8 @@ const app = new Hono<AppEnv>()
     }
 
     await db.delete(stories).where(eq(stories.id, storyId))
+
+    await notifyRoomAndStories(c.env, roomId)
 
     return c.body(null, 204)
   })
