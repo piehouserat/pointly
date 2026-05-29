@@ -80,6 +80,7 @@ export function RoomShell({
             onSidebarToggle={() => setSidebarOpen((open) => !open)}
             onRoomChange={onRoomChange}
             onParticipantChange={onParticipantChange}
+            onRefreshRoomState={() => void refresh()}
             onInviteClick={() => setInviteOpen(true)}
           />
           <div className="flex min-h-0 flex-1 flex-col">

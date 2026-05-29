@@ -1,4 +1,5 @@
-import { createDb, participants, type Participant } from "@pointly/db"
+import { createDb, participants } from '@pointly/db';
+import type { Participant } from '@pointly/db';
 import { and, eq } from "drizzle-orm"
 
 import { getAuth } from "@/lib/auth"

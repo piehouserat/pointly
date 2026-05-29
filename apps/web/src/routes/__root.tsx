@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import { ThemeProvider } from "@lonik/themer"
 
+import { AuthDialogProvider } from "@/components/auth/auth-dialog-provider"
 import appCss from "@pointly/ui/globals.css?url"
 import { TooltipProvider } from "@pointly/ui/components/tooltip"
 
@@ -42,7 +43,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" enableSystem>
-          <TooltipProvider>{children}</TooltipProvider>
+          <AuthDialogProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthDialogProvider>
         </ThemeProvider>
         <Scripts />
       </body>

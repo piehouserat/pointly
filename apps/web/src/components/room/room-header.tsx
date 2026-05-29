@@ -3,7 +3,7 @@ import { PanelRight, UserPlus } from "lucide-react"
 
 import { RoomGameMenu } from "@/components/room/room-game-menu"
 import { RoomTimerPopover } from "@/components/room/room-timer-popover"
-import { RoomUserMenu } from "@/components/room/room-user-menu"
+import { UserMenu } from "@/components/user-menu"
 import type { Participant } from "@/lib/api/participants"
 import type { RoomWithRelations } from "@/lib/api/rooms"
 import { Button } from "@pointly/ui/components/button"
@@ -21,6 +21,7 @@ type RoomHeaderProps = {
   onSidebarToggle: () => void
   onRoomChange: (room: RoomWithRelations) => void
   onParticipantChange: (participant: Participant) => void
+  onRefreshRoomState: () => void | Promise<void>
   onInviteClick: () => void
 }
 
@@ -31,6 +32,7 @@ export function RoomHeader({
   onSidebarToggle,
   onRoomChange,
   onParticipantChange,
+  onRefreshRoomState,
   onInviteClick,
 }: RoomHeaderProps) {
   return (
@@ -52,10 +54,11 @@ export function RoomHeader({
       <div className="ml-auto flex items-center gap-2">
         <RoomTimerPopover />
 
-        <RoomUserMenu
+        <UserMenu
           roomId={room.id}
           participant={participant}
           onParticipantChange={onParticipantChange}
+          onRefreshRoomState={onRefreshRoomState}
         />
 
         <Tooltip>
