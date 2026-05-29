@@ -38,11 +38,11 @@ export async function fetchRoomState(roomId: string): Promise<RoomState> {
 
 export async function startVoting(
   roomId: string,
-  title?: string
+  options?: { title?: string; storyId?: string }
 ): Promise<ActiveStory> {
   const response = await apiFetch(`/rooms/${roomId}/voting/start`, {
     method: "POST",
-    body: JSON.stringify(title ? { title } : {}),
+    body: JSON.stringify(options ?? {}),
   })
 
   if (!response.ok) {
