@@ -3,9 +3,12 @@ import { Smile } from "lucide-react"
 import { useState } from "react"
 import { z } from "zod"
 
+import { useAuthDialog } from "@/components/auth/auth-dialog-provider"
 import { joinRoom } from "@/lib/api/participants"
 import type { Participant } from "@/lib/api/participants"
 import { authClient } from "@/lib/auth-client"
+import { authCallbackUrl } from "@/lib/auth-callback-url"
+import { updateUserName } from "@/lib/update-user-name"
 import { Button } from "@pointly/ui/components/button"
 import {
   Dialog,
@@ -31,19 +34,31 @@ const joinSchema = z.object({
   isSpectator: z.boolean(),
 })
 
+const profileNameSchema = z.object({
+  name: z.string().min(1, "Display name is required").max(100),
+  isSpectator: z.boolean(),
+})
+
+export type JoinRoomDialogMode = "join" | "setup-profile"
+
 type JoinRoomDialogProps = {
   roomId: string
   open: boolean
+  mode: JoinRoomDialogMode
   onJoined: (participant: Participant) => void
 }
 
 export function JoinRoomDialog({
   roomId,
   open,
+  mode,
   onJoined,
 }: JoinRoomDialogProps) {
   const session = authClient.useSession()
+  const { openLogin, openSignup } = useAuthDialog()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const roomCallbackUrl = authCallbackUrl(`/rooms/${roomId}`)
+  const isSetupProfile = mode === "setup-profile"
 
   const form = useForm({
     defaultValues: {
@@ -51,12 +66,17 @@ export function JoinRoomDialog({
       isSpectator: false,
     },
     validators: {
-      onSubmit: joinSchema,
+      onSubmit: isSetupProfile ? profileNameSchema : joinSchema,
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null)
       try {
-        if (!session.data?.user) {
+        const trimmedName = value.name.trim()
+
+        if (isSetupProfile) {
+          await updateUserName(trimmedName)
+          await session.refetch()
+        } else if (!session.data?.user) {
           const anon = await authClient.signIn.anonymous()
           if (anon.error) {
             throw new Error(anon.error.message ?? "Anonymous sign-in failed")
@@ -65,7 +85,7 @@ export function JoinRoomDialog({
 
         const participant = await joinRoom({
           roomId,
-          name: value.name.trim(),
+          name: trimmedName,
           isSpectator: value.isSpectator,
         })
 
@@ -83,9 +103,13 @@ export function JoinRoomDialog({
     <Dialog open={open}>
       <DialogContent showCloseButton={false} className="gap-5 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Choose your display name</DialogTitle>
-          <DialogDescription className="sr-only">
-            Enter a display name to join this planning poker room.
+          <DialogTitle>
+            {isSetupProfile ? "Set your display name" : "Choose your display name"}
+          </DialogTitle>
+          <DialogDescription>
+            {isSetupProfile ?
+              "This name is saved to your account and used when you join rooms."
+            : "Enter a display name to join this planning poker room."}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,7 +142,7 @@ export function JoinRoomDialog({
                           field.handleChange(event.target.value)
                         }
                         aria-invalid={isInvalid}
-                        autoComplete="off"
+                        autoComplete="name"
                         className="pr-9"
                       />
                       <Smile className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground" />
@@ -146,11 +170,11 @@ export function JoinRoomDialog({
             </form.Field>
           </FieldGroup>
 
-          {submitError ? (
+          {submitError ?
             <p className="text-sm text-destructive" role="alert">
               {submitError}
             </p>
-          ) : null}
+          : null}
 
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(isSubmitting) => (
@@ -166,22 +190,24 @@ export function JoinRoomDialog({
             )}
           </form.Subscribe>
 
-          <div className="flex items-center justify-between text-sm">
-            <button
-              type="button"
-              className="font-medium text-primary hover:underline"
-              disabled
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className="font-medium text-primary hover:underline"
-              disabled
-            >
-              Sign Up
-            </button>
-          </div>
+          {!isSetupProfile ?
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+                onClick={() => openLogin({ callbackURL: roomCallbackUrl })}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+                onClick={() => openSignup({ callbackURL: roomCallbackUrl })}
+              >
+                Sign Up
+              </button>
+            </div>
+          : null}
         </form>
       </DialogContent>
     </Dialog>

@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception"
 import { logger } from "hono/logger"
 
 import { getAuth } from "@/lib/auth"
+import devEmail from "@/routes/dev-email"
 import rooms from "@/routes/rooms"
 import type { AppEnv } from "@/types"
 
@@ -35,6 +36,7 @@ const app = new Hono<AppEnv>()
     return c.get("auth").handler(c.req.raw)
   })
   .get("/health", (c) => c.json({ status: "ok" }))
+  .route("/dev/email", devEmail)
   .route("/rooms", rooms)
   .onError((err, c) => {
     if (err instanceof HTTPException) {

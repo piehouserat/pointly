@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-import { JoinRoomDialog } from "@/components/join-room-dialog"
+import { JoinRoomDialog } from '@/components/join-room-dialog';
+import type { JoinRoomDialogMode } from '@/components/join-room-dialog';
 import { RoomPreview } from "@/components/room/room-preview"
 import { RoomShell } from "@/components/room/room-shell"
-import { fetchMyParticipant } from '@/lib/api/participants';
-import type { Participant } from '@/lib/api/participants';
-import { fetchRoom } from '@/lib/api/rooms';
-import type { RoomWithRelations } from '@/lib/api/rooms';
+import { fetchMyParticipant, joinRoom } from "@/lib/api/participants"
+import type { Participant } from "@/lib/api/participants"
+import { fetchRoom } from "@/lib/api/rooms"
+import type { RoomWithRelations } from "@/lib/api/rooms"
+import { useRoomLobbySync } from "@/hooks/use-room-lobby-sync"
+import { authClient } from "@/lib/auth-client"
+import { hasUserDisplayName } from "@/lib/user-display-name"
 import { Spinner } from "@pointly/ui/components/spinner"
 
 export const Route = createFileRoute("/rooms/$roomId")({
@@ -19,10 +23,15 @@ export const Route = createFileRoute("/rooms/$roomId")({
 
 function RoomPage() {
   const { roomId } = Route.useParams()
+  const session = authClient.useSession()
   const [room, setRoom] = useState<RoomWithRelations | null>(null)
   const [participant, setParticipant] = useState<Participant | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [joinDialogMode, setJoinDialogMode] =
+    useState<JoinRoomDialogMode>("join")
+  const [isAutoJoining, setIsAutoJoining] = useState(false)
+  const autoJoinAttempted = useRef(false)
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -47,8 +56,53 @@ function RoomPage() {
   }, [load])
 
   const needsJoin = !isLoading && !loadError && room && !participant
+  const needsJoinDialog = needsJoin && !isAutoJoining
 
-  if (isLoading) {
+  useRoomLobbySync({
+    roomId,
+    enabled: needsJoin === true,
+    onRoomChange: setRoom,
+  })
+
+  useEffect(() => {
+    if (!needsJoin || session.isPending || autoJoinAttempted.current) {
+      return
+    }
+
+    const user = session.data?.user
+
+    if (!user || user.isAnonymous) {
+      setJoinDialogMode("join")
+      return
+    }
+
+    if (!hasUserDisplayName(user)) {
+      setJoinDialogMode("setup-profile")
+      return
+    }
+
+    autoJoinAttempted.current = true
+    setIsAutoJoining(true)
+
+    void joinRoom({
+      roomId,
+      name: user.name.trim(),
+      isSpectator: false,
+    })
+      .then((joined) => {
+        setParticipant(joined)
+        void load()
+      })
+      .catch(() => {
+        autoJoinAttempted.current = false
+        setJoinDialogMode("join")
+      })
+      .finally(() => {
+        setIsAutoJoining(false)
+      })
+  }, [load, needsJoin, roomId, session.data?.user, session.isPending])
+
+  if (isLoading || isAutoJoining) {
     return (
       <main className="flex flex-1 items-center justify-center py-32">
         <Spinner className="size-8" />
@@ -68,8 +122,8 @@ function RoomPage() {
   return (
     <>
       <div
-        className={needsJoin ? "pointer-events-none flex min-h-svh flex-col opacity-40 blur-[2px]" : "flex min-h-svh flex-col"}
-        aria-hidden={needsJoin || undefined}
+        className={needsJoinDialog ? "pointer-events-none flex min-h-svh flex-col opacity-40 blur-[2px]" : "flex min-h-svh flex-col"}
+        aria-hidden={needsJoinDialog || undefined}
       >
         {participant ?
           <RoomShell
@@ -81,16 +135,17 @@ function RoomPage() {
         : <RoomPreview room={room} />}
       </div>
 
-      {needsJoin ? (
+      {needsJoinDialog ?
         <JoinRoomDialog
           roomId={roomId}
           open
+          mode={joinDialogMode}
           onJoined={(joined) => {
             setParticipant(joined)
             void load()
           }}
         />
-      ) : null}
+      : null}
     </>
   )
 }

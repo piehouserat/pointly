@@ -1,5 +1,6 @@
 import type { Auth } from "@pointly/auth"
 import type { Db } from "@pointly/db"
+import type { SendEmail } from "@pointly/email"
 
 import type { RoomRealtime } from "@/durable-objects/room-realtime"
 
@@ -8,6 +9,9 @@ export type Bindings = {
   CORS_ORIGIN?: string
   BETTER_AUTH_SECRET: string
   BETTER_AUTH_URL: string
+  EMAIL: SendEmail
+  EMAIL_FROM?: string
+  EMAIL_TEST_TO?: string
   ROOM_REALTIME: DurableObjectNamespace<RoomRealtime>
 }
 

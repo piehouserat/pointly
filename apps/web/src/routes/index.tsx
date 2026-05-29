@@ -1,8 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
 
+import { useAuthDialog } from "@/components/auth/auth-dialog-provider"
 import { PokerIllustration } from "@/components/landing/poker-illustration"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { buttonVariants } from "@pointly/ui/components/button"
+import { UserMenu } from "@/components/user-menu"
+import { authClient } from "@/lib/auth-client"
+import { Button, buttonVariants } from "@pointly/ui/components/button"
+import { Spinner } from "@pointly/ui/components/spinner"
 import { cn } from "@pointly/ui/lib/utils"
 
 export const Route = createFileRoute("/")({
@@ -18,6 +21,13 @@ const navLinkClass = cn(
 )
 
 function LandingPage() {
+  const session = authClient.useSession()
+  const { openLogin, openSignup } = useAuthDialog()
+  const isGuest =
+    session.isPending ||
+    !session.data?.user ||
+    session.data.user.isAnonymous !== false
+
   return (
     <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
       <div
@@ -45,22 +55,31 @@ function LandingPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <ThemeToggle />
-            <a
-              href="#signup"
-              className={cn(navLinkClass, "hidden sm:inline-flex")}
-            >
-              Sign up
-            </a>
-            <a
-              href="#login"
-              className={cn(navLinkClass, "hidden sm:inline-flex")}
-            >
-              Login
-            </a>
             <Link to="/new-game" className={buttonVariants({ size: "sm" })}>
               Start new game
             </Link>
+            {session.isPending ?
+              <Button variant="ghost" size="icon-sm" disabled aria-label="Loading account">
+                <Spinner className="size-4" />
+              </Button>
+            : isGuest ?
+              <>
+                <button
+                  type="button"
+                  className={cn(navLinkClass, "hidden sm:inline-flex")}
+                  onClick={() => openSignup()}
+                >
+                  Sign up
+                </button>
+                <button
+                  type="button"
+                  className={cn(navLinkClass, "hidden sm:inline-flex")}
+                  onClick={() => openLogin()}
+                >
+                  Login
+                </button>
+              </>
+            : <UserMenu />}
           </div>
         </div>
       </header>

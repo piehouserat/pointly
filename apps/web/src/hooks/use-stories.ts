@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 
-import { fetchStories, type Story } from "@/lib/api/stories"
+import { fetchStories } from '@/lib/api/stories';
+import type { Story } from '@/lib/api/stories';
 
 /** One-shot stories fetch (no polling). Prefer `useRoomRealtime` in the room UI. */
 export function useStories(roomId: string, enabled = true) {

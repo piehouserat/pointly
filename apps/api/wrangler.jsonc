@@ -15,6 +15,13 @@
   "observability": {
     "enabled": true
   },
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["noreply@point-ly.com"],
+      "remote": true
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {
@@ -35,7 +42,8 @@
   },
   "vars": {
     "CORS_ORIGIN": "https://point-ly.com",
-    "BETTER_AUTH_URL": "https://api.point-ly.com"
+    "BETTER_AUTH_URL": "https://api.point-ly.com",
+    "EMAIL_FROM": "noreply@point-ly.com"
   },
   "env": {
     "development": {

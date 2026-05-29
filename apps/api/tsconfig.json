@@ -16,7 +16,8 @@
       "@/*": ["./src/*"],
       "@pointly/auth": ["../../packages/auth/src/index.ts"],
       "@pointly/db": ["../../packages/db/src/index.ts"],
-      "@pointly/db/schema": ["../../packages/db/src/schema.ts"]
+      "@pointly/db/schema": ["../../packages/db/src/schema.ts"],
+      "@pointly/email": ["../../packages/email/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts"]
