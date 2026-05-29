@@ -3,7 +3,6 @@ import { motion } from "motion/react"
 import { useState } from "react"
 
 import { StoryCard } from "@/components/room/story-card"
-import { useStories } from "@/hooks/use-stories"
 import type { Participant } from "@/lib/api/participants"
 import { startVoting } from "@/lib/api/room-state"
 import {
@@ -18,7 +17,6 @@ import type { Room } from "@/lib/schemas/room"
 import { Button } from "@pointly/ui/components/button"
 import { Field, FieldLabel } from "@pointly/ui/components/field"
 import { ScrollArea } from "@pointly/ui/components/scroll-area"
-import { Separator } from "@pointly/ui/components/separator"
 import { Spinner } from "@pointly/ui/components/spinner"
 import { Textarea } from "@pointly/ui/components/textarea"
 import { cn } from "@pointly/ui/lib/utils"
@@ -28,6 +26,9 @@ export const storiesSidebarWidth = 420
 type RoomStoriesSidebarProps = {
   room: Room
   participant: Participant
+  stories: Array<Story>
+  isLoading?: boolean
+  error?: string | null
   onClose: () => void
   onStoriesChange: () => void
 }
@@ -99,10 +100,12 @@ function storyPoints(stories: Array<Story>) {
 export function RoomStoriesSidebar({
   room,
   participant,
+  stories,
+  isLoading = false,
+  error = null,
   onClose,
   onStoriesChange,
 }: RoomStoriesSidebarProps) {
-  const { stories, isLoading, error, refresh } = useStories(room.id)
   const [isAdding, setIsAdding] = useState(false)
   const [editingStory, setEditingStory] = useState<Story | null>(null)
   const [title, setTitle] = useState("")
@@ -153,7 +156,6 @@ export function RoomStoriesSidebar({
           order: stories.length,
         })
       }
-      await refresh()
       onStoriesChange()
       closeForm()
     } catch (err) {
@@ -168,7 +170,6 @@ export function RoomStoriesSidebar({
     setFormError(null)
     try {
       await deleteStory(room.id, story.id)
-      await refresh()
       onStoriesChange()
       if (editingStory?.id === story.id) {
         closeForm()
@@ -187,7 +188,6 @@ export function RoomStoriesSidebar({
     setFormError(null)
     try {
       await startVoting(room.id, { storyId: story.id })
-      await refresh()
       onStoriesChange()
     } catch (err) {
       setFormError(

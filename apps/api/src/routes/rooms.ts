@@ -5,6 +5,7 @@ import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
+import { notifyRoomState } from "@/lib/realtime/notify"
 import type { AppEnv } from "@/types"
 import { createRoomSchema, updateRoomSchema } from "@/validators"
 import participantsRoute from "./participants"
@@ -74,6 +75,8 @@ const app = new Hono<AppEnv>()
     if (!room) {
       throw notFound("Room not found")
     }
+
+    await notifyRoomState(c.env, roomId)
 
     return c.json(room)
   })

@@ -172,14 +172,14 @@ export async function maybeAutoReveal(
   db: Db,
   roomId: string,
   storyId: string
-) {
+): Promise<boolean> {
   const [room] = await db
     .select()
     .from(rooms)
     .where(eq(rooms.id, roomId))
     .limit(1)
 
-  if (!room?.autoReveal) return
+  if (!room?.autoReveal) return false
 
   const roomParticipants = await db
     .select()
@@ -191,7 +191,8 @@ export async function maybeAutoReveal(
     .from(votes)
     .where(eq(votes.storyId, storyId))
 
-  if (!allVotersHaveVoted(roomParticipants, voteRows)) return
+  if (!allVotersHaveVoted(roomParticipants, voteRows)) return false
 
   await revealStory(db, storyId)
+  return true
 }

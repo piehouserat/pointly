@@ -9,7 +9,7 @@ import { RoomTable } from "@/components/room/room-table"
 import { RoomTimerExpiredAlert } from "@/components/room/room-timer-expired-alert"
 import { RoomTimerProvider } from "@/components/room/room-timer-context"
 import { VotingResults } from "@/components/room/voting-results"
-import { useRoomState } from "@/hooks/use-room-state"
+import { useRoomRealtime } from "@/hooks/use-room-realtime"
 import type { Participant } from "@/lib/api/participants"
 import type { RoomWithRelations } from "@/lib/api/rooms"
 import { Spinner } from "@pointly/ui/components/spinner"
@@ -31,12 +31,29 @@ export function RoomShell({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isRevealCountdown, setIsRevealCountdown] = useState(false)
   const deckRef = useRef<HTMLDivElement>(null)
-  const { state, isLoading, refresh } = useRoomState(room.id)
+  const {
+    state,
+    stories,
+    error,
+    isLoading,
+    isStoriesLoading,
+    refresh,
+  } = useRoomRealtime(room.id, { loadStories: sidebarOpen })
 
   if (isLoading || !state) {
     return (
       <div className="flex flex-1 items-center justify-center py-32">
         <Spinner className="size-8" />
+      </div>
+    )
+  }
+
+  if (error && !state) {
+    return (
+      <div className="flex flex-1 items-center justify-center px-6 py-32">
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
       </div>
     )
   }
@@ -97,6 +114,9 @@ export function RoomShell({
               key="room-stories-sidebar"
               room={state.room}
               participant={participant}
+              stories={stories}
+              isLoading={isStoriesLoading}
+              error={error}
               onClose={() => setSidebarOpen(false)}
               onStoriesChange={() => void refresh()}
             />

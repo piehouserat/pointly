@@ -7,6 +7,10 @@ import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
 import { requireRoomParticipant } from "@/lib/participant"
+import {
+  notifyRoomAndStories,
+  notifyRoomState,
+} from "@/lib/realtime/notify"
 import { maybeAutoReveal } from "@/lib/voting"
 import type { AppEnv } from "@/types"
 import { castVoteSchema, updateVoteSchema } from "@/validators"
@@ -81,7 +85,12 @@ const app = new Hono<AppEnv>()
       })
       .returning()
 
-    await maybeAutoReveal(db, roomId, storyId)
+    const revealed = await maybeAutoReveal(db, roomId, storyId)
+    if (revealed) {
+      await notifyRoomAndStories(c.env, roomId)
+    } else {
+      await notifyRoomState(c.env, roomId)
+    }
 
     return c.json(
       {
@@ -134,7 +143,12 @@ const app = new Hono<AppEnv>()
       .where(eq(votes.id, voteId))
       .returning()
 
-    await maybeAutoReveal(db, roomId, storyId)
+    const revealed = await maybeAutoReveal(db, roomId, storyId)
+    if (revealed) {
+      await notifyRoomAndStories(c.env, roomId)
+    } else {
+      await notifyRoomState(c.env, roomId)
+    }
 
     return c.json({
       participantId: vote.participantId,
@@ -170,6 +184,8 @@ const app = new Hono<AppEnv>()
           eq(votes.participantId, participant.id)
         )
       )
+
+    await notifyRoomState(c.env, roomId)
 
     return c.body(null, 204)
   })
@@ -209,6 +225,8 @@ const app = new Hono<AppEnv>()
     }
 
     await db.delete(votes).where(eq(votes.id, voteId))
+
+    await notifyRoomState(c.env, roomId)
 
     return c.body(null, 204)
   })

@@ -19,7 +19,7 @@ const app = new Hono<AppEnv>()
     const origin = c.env.CORS_ORIGIN ?? "http://localhost:3000"
     return cors({
       origin: [origin],
-      allowHeaders: ["Content-Type", "Cookie"],
+      allowHeaders: ["Content-Type", "Cookie", "Upgrade", "Connection"],
       allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
     })(c, next)
