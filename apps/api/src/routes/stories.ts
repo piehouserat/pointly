@@ -5,6 +5,7 @@ import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
+import { backfillStoryEstimates } from "@/lib/voting"
 import type { AppEnv } from "@/types"
 import { createStorySchema, updateStorySchema } from "@/validators"
 import votesRoute from "./votes"
@@ -20,7 +21,7 @@ const app = new Hono<AppEnv>()
       .where(eq(stories.roomId, roomId))
       .orderBy(asc(stories.order), asc(stories.createdAt))
 
-    return c.json(result)
+    return c.json(await backfillStoryEstimates(db, result))
   })
   .post("/", zValidator("json", createStorySchema), async (c) => {
     const db = getDb(c)

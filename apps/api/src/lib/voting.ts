@@ -81,6 +81,85 @@ export function allVotersHaveVoted(
   return voters.every((p) => votedIds.has(p.id))
 }
 
+export function computeFinalEstimate(voteValues: Array<string>) {
+  if (voteValues.length === 0) return null
+
+  const counts = new Map<string, number>()
+  for (const value of voteValues) {
+    counts.set(value, (counts.get(value) ?? 0) + 1)
+  }
+
+  let mode: string | null = null
+  let maxCount = 0
+  for (const [value, count] of counts) {
+    if (count > maxCount) {
+      mode = value
+      maxCount = count
+    }
+  }
+
+  return mode
+}
+
+export async function revealStory(db: Db, storyId: string) {
+  const voteRows = await db
+    .select()
+    .from(votes)
+    .where(eq(votes.storyId, storyId))
+
+  const finalEstimate = computeFinalEstimate(voteRows.map((vote) => vote.value))
+
+  const [story] = await db
+    .update(stories)
+    .set({ status: "revealed", finalEstimate, updatedAt: new Date() })
+    .where(eq(stories.id, storyId))
+    .returning()
+
+  return story
+}
+
+export async function backfillStoryEstimates(db: Db, storyList: Array<Story>) {
+  const missing = storyList.filter(
+    (story) => story.status === "revealed" && story.finalEstimate == null
+  )
+  if (missing.length === 0) return storyList
+
+  const voteRows = await db
+    .select()
+    .from(votes)
+    .where(inArray(votes.storyId, missing.map((story) => story.id)))
+
+  const votesByStory = new Map<string, Array<string>>()
+  for (const vote of voteRows) {
+    const current = votesByStory.get(vote.storyId) ?? []
+    current.push(vote.value)
+    votesByStory.set(vote.storyId, current)
+  }
+
+  const estimateByStoryId = new Map<string, string | null>()
+  for (const story of missing) {
+    estimateByStoryId.set(
+      story.id,
+      computeFinalEstimate(votesByStory.get(story.id) ?? [])
+    )
+  }
+
+  await Promise.all(
+    [...estimateByStoryId.entries()].map(([storyId, finalEstimate]) =>
+      db
+        .update(stories)
+        .set({ finalEstimate, updatedAt: new Date() })
+        .where(eq(stories.id, storyId))
+    )
+  )
+
+  return storyList.map((story) => {
+    const estimate = estimateByStoryId.get(story.id)
+    if (estimate == null) return story
+    return { ...story, finalEstimate: estimate }
+  })
+}
+
 export function canReveal(
   room: { whoCanReveal: "all_players" | "host_only" },
   participant: Participant
@@ -114,8 +193,5 @@ export async function maybeAutoReveal(
 
   if (!allVotersHaveVoted(roomParticipants, voteRows)) return
 
-  await db
-    .update(stories)
-    .set({ status: "revealed", updatedAt: new Date() })
-    .where(eq(stories.id, storyId))
+  await revealStory(db, storyId)
 }

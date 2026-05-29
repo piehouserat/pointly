@@ -7,10 +7,18 @@ import { RoomUserMenu } from "@/components/room/room-user-menu"
 import type { Participant } from "@/lib/api/participants"
 import type { RoomWithRelations } from "@/lib/api/rooms"
 import { Button } from "@pointly/ui/components/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@pointly/ui/components/tooltip"
+import { cn } from "@pointly/ui/lib/utils"
 
 type RoomHeaderProps = {
   room: RoomWithRelations
   participant: Participant
+  sidebarOpen: boolean
+  onSidebarToggle: () => void
   onRoomChange: (room: RoomWithRelations) => void
   onParticipantChange: (participant: Participant) => void
   onInviteClick: () => void
@@ -19,6 +27,8 @@ type RoomHeaderProps = {
 export function RoomHeader({
   room,
   participant,
+  sidebarOpen,
+  onSidebarToggle,
   onRoomChange,
   onParticipantChange,
   onInviteClick,
@@ -48,19 +58,38 @@ export function RoomHeader({
           onParticipantChange={onParticipantChange}
         />
 
-        <Button variant="outline" onClick={onInviteClick}>
-          <UserPlus data-icon="inline-start" />
-          Invite players
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button variant="outline" onClick={onInviteClick}>
+                <UserPlus />
+              </Button>
+            }
+          />
+          <TooltipContent side="bottom" sideOffset={6}>
+            Invite players
+          </TooltipContent>
+        </Tooltip>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled
-          title="Sidebar (coming soon)"
-        >
-          <PanelRight />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Stories sidebar"
+                aria-expanded={sidebarOpen}
+                className={cn(sidebarOpen && "bg-muted text-foreground")}
+                onClick={onSidebarToggle}
+              >
+                <PanelRight />
+              </Button>
+            }
+          />
+          <TooltipContent side="bottom" sideOffset={6}>
+            Stories
+          </TooltipContent>
+        </Tooltip>
       </div>
     </header>
   )

@@ -8,11 +8,12 @@ import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
 import { requireRoomParticipant } from "@/lib/participant"
-import { canReveal, getActiveStory } from "@/lib/voting"
+import { canReveal, getActiveStory, revealStory } from "@/lib/voting"
 import type { AppEnv } from "@/types"
 
 const startVotingSchema = z.object({
   title: z.string().min(1).max(500).optional(),
+  storyId: z.uuid().optional(),
 })
 
 const app = new Hono<AppEnv>()
@@ -39,6 +40,37 @@ const app = new Hono<AppEnv>()
     const existing = await getActiveStory(db, roomId)
     if (existing?.status === "voting") {
       return c.json(existing)
+    }
+
+    if (body.storyId) {
+      const [target] = await db
+        .select()
+        .from(stories)
+        .where(eq(stories.id, body.storyId))
+        .limit(1)
+
+      if (!target || target.roomId !== roomId) {
+        throw notFound("Story not found")
+      }
+
+      if (target.status !== "pending") {
+        throw new HTTPException(400, {
+          message: "Only pending stories can be started",
+        })
+      }
+
+      await db
+        .update(stories)
+        .set({ status: "skipped", updatedAt: new Date() })
+        .where(and(eq(stories.roomId, roomId), eq(stories.status, "voting")))
+
+      const [story] = await db
+        .update(stories)
+        .set({ status: "voting", updatedAt: new Date() })
+        .where(eq(stories.id, target.id))
+        .returning()
+
+      return c.json(story)
     }
 
     await db
@@ -87,11 +119,7 @@ const app = new Hono<AppEnv>()
       throw new HTTPException(400, { message: "No active voting round" })
     }
 
-    const [story] = await db
-      .update(stories)
-      .set({ status: "revealed", updatedAt: new Date() })
-      .where(eq(stories.id, activeStory.id))
-      .returning()
+    const story = await revealStory(db, activeStory.id)
 
     return c.json(story)
   })
