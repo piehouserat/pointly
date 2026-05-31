@@ -1,11 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
 
-import { useAuthDialog } from "@/components/auth/auth-dialog-provider"
+import { LandingHeader } from "@/components/landing/landing-header"
 import { PokerIllustration } from "@/components/landing/poker-illustration"
-import { UserMenu } from "@/components/user-menu"
-import { authClient } from "@/lib/auth-client"
-import { Button, buttonVariants } from "@pointly/ui/components/button"
-import { Spinner } from "@pointly/ui/components/spinner"
+import { buttonVariants } from "@pointly/ui/components/button"
 import { cn } from "@pointly/ui/lib/utils"
 
 export const Route = createFileRoute("/")({
@@ -15,19 +12,7 @@ export const Route = createFileRoute("/")({
   }),
 })
 
-const navLinkClass = cn(
-  buttonVariants({ variant: "ghost", size: "sm" }),
-  "text-muted-foreground hover:bg-muted hover:text-foreground"
-)
-
 function LandingPage() {
-  const session = authClient.useSession()
-  const { openLogin, openSignup } = useAuthDialog()
-  const isGuest =
-    session.isPending ||
-    !session.data?.user ||
-    session.data.user.isAnonymous !== false
-
   return (
     <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
       <div
@@ -35,54 +20,7 @@ function LandingPage() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-background to-transparent"
       />
 
-      <header className="relative z-10 border-b border-border">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex min-w-0 shrink-0 items-center">
-            <img
-              src="/pointly-logo-primary.svg"
-              alt="Pointly"
-              className="h-8 w-auto max-w-36 object-contain object-left sm:h-9 sm:max-w-none dark:brightness-0 dark:invert"
-            />
-          </Link>
-
-          <nav className="hidden items-center gap-1 md:flex">
-            <a href="#features" className={navLinkClass}>
-              Features
-            </a>
-            <a href="#pricing" className={navLinkClass}>
-              Pricing
-            </a>
-          </nav>
-
-          <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <Link to="/new-game" className={buttonVariants({ size: "sm" })}>
-              Start new game
-            </Link>
-            {session.isPending ?
-              <Button variant="ghost" size="icon-sm" disabled aria-label="Loading account">
-                <Spinner className="size-4" />
-              </Button>
-            : isGuest ?
-              <>
-                <button
-                  type="button"
-                  className={cn(navLinkClass, "hidden sm:inline-flex")}
-                  onClick={() => openSignup()}
-                >
-                  Sign up
-                </button>
-                <button
-                  type="button"
-                  className={cn(navLinkClass, "hidden sm:inline-flex")}
-                  onClick={() => openLogin()}
-                >
-                  Login
-                </button>
-              </>
-            : <UserMenu />}
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">

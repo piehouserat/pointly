@@ -39,9 +39,9 @@ export function RoomHeader({
     <header className="flex h-14 shrink-0 items-center gap-3 px-4 sm:px-6">
       <Link to="/" className="shrink-0">
         <img
-          src="/pointly-logo-primary.svg"
+          src="/pointly-logo-header.svg"
           alt="Pointly"
-          className="h-8 w-auto object-contain dark:brightness-0 dark:invert"
+          className="h-8 w-auto object-contain"
         />
       </Link>
 
