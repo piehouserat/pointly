@@ -24,6 +24,14 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "manifest",
+        href: "/manifest.json",
+      },
+      {
+        rel: "icon",
+        href: "/pointly-favicon.svg",
+      },
     ],
   }),
   notFoundComponent: () => (

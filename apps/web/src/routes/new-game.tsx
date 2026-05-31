@@ -15,9 +15,9 @@ function NewGamePage() {
       <header className="flex items-center gap-3 px-6 py-6 sm:px-8">
         <Link to="/" className="shrink-0">
           <img
-            src="/pointly-logo-primary.svg"
+            src="/pointly-logo-header.svg"
             alt="Pointly"
-            className="h-8 w-auto object-contain dark:brightness-0 dark:invert"
+            className="h-8 w-auto object-contain"
           />
         </Link>
         <h1 className="text-xl font-semibold tracking-tight">Create game</h1>

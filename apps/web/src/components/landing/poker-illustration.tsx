@@ -2,15 +2,28 @@ import { Coffee, HelpCircle, User } from "lucide-react"
 
 import { cn } from "@pointly/ui/lib/utils"
 
-const participants = [
-  { name: "Sara", angle: -130, distance: 42 },
-  { name: "Michael", angle: -55, distance: 44 },
-  { name: "Jennifer", angle: 35, distance: 44 },
-  { name: "Alex", angle: 115, distance: 42 },
-  { name: "Priya", angle: 175, distance: 38 },
-] as const
+const participants = {
+  top: [{ name: "Sara" }, { name: "Michael" }],
+  bottom: [{ name: "Priya" }, { name: "Alex" }],
+  left: { name: "Jennifer" },
+  right: { name: "Jordan" },
+} as const
 
 const deckValues = ["0", "1", "2", "3", "5", "8", "13"] as const
+
+function ParticipantSeat({ name }: { name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground ring-2 ring-card">
+        <User className="size-4" />
+      </div>
+      <span className="text-[10px] font-medium text-muted-foreground">
+        {name}
+      </span>
+      <div className="h-7 w-5 rounded-sm border border-border bg-muted shadow-sm" />
+    </div>
+  )
+}
 
 export function PokerIllustration({ className }: { className?: string }) {
   return (
@@ -21,31 +34,29 @@ export function PokerIllustration({ className }: { className?: string }) {
       )}
       aria-hidden
     >
-      <div className="relative mx-auto aspect-square w-full max-w-[280px]">
-        {participants.map((participant) => {
-          const radians = (participant.angle * Math.PI) / 180
-          const x = 50 + Math.cos(radians) * participant.distance
-          const y = 50 + Math.sin(radians) * participant.distance
+      <div className="relative mx-auto flex aspect-square w-full max-w-[280px] flex-col">
+        <div className="flex justify-center gap-12 sm:gap-16">
+          {participants.top.map((participant) => (
+            <ParticipantSeat key={participant.name} name={participant.name} />
+          ))}
+        </div>
 
-          return (
-            <div
-              key={participant.name}
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-              style={{ left: `${x}%`, top: `${y}%` }}
-            >
-              <div className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground ring-2 ring-card">
-                <User className="size-4" />
-              </div>
-              <span className="text-[10px] font-medium text-muted-foreground">{participant.name}</span>
-              <div className="h-7 w-5 rounded-sm border border-border bg-muted shadow-sm" />
+        <div className="flex flex-1 items-center justify-between px-2">
+          <ParticipantSeat name={participants.left.name} />
+
+          <div className="flex w-[58%] flex-col items-center gap-3 rounded-xl bg-primary/10 px-4 py-5">
+            <div className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm">
+              Reveal cards
             </div>
-          )
-        })}
-
-        <div className="absolute top-1/2 left-1/2 flex w-[58%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 rounded-xl bg-primary/10 px-4 py-5">
-          <div className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm">
-            Reveal cards
           </div>
+
+          <ParticipantSeat name={participants.right.name} />
+        </div>
+
+        <div className="flex justify-center gap-12 sm:gap-16">
+          {participants.bottom.map((participant) => (
+            <ParticipantSeat key={participant.name} name={participant.name} />
+          ))}
         </div>
       </div>
 
