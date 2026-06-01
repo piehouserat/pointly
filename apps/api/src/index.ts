@@ -25,7 +25,9 @@ export default {
       }
 
       const id = env.ROOM_REALTIME.idFromName(roomId)
-      return env.ROOM_REALTIME.get(id).fetch(request)
+      const doUrl = new URL(request.url)
+      doUrl.searchParams.set("participantId", auth.participant.id)
+      return env.ROOM_REALTIME.get(id).fetch(new Request(doUrl, request))
     }
 
     return app.fetch(request, env, ctx)

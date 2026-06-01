@@ -70,3 +70,20 @@ export async function updateMyParticipant(
 
   return response.json() as Promise<Participant>
 }
+
+export async function leaveRoom(
+  roomId: string,
+  options?: { keepalive?: boolean }
+): Promise<void> {
+  const response = await apiFetch(`/rooms/${roomId}/participants/me`, {
+    method: "DELETE",
+    keepalive: options?.keepalive,
+  })
+
+  if (!response.ok && response.status !== 404) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
+    throw new Error(body?.error ?? "Failed to leave room")
+  }
+}
