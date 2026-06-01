@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 
 import type { Participant } from "@/lib/api/participants"
-import type { RoomState } from "@/lib/api/room-state"
+import type { RoomState, VoteView } from "@/lib/api/room-state"
 import { castVote, clearMyVote } from "@/lib/api/room-state"
 import { getDeckForRoom } from "@/lib/room/decks"
 import { cn } from "@pointly/ui/lib/utils"
@@ -10,15 +10,13 @@ import { cn } from "@pointly/ui/lib/utils"
 type RoomCardDeckProps = {
   roomState: RoomState
   participant: Participant
-  onStateChange: () => void
-  deckRef?: React.RefObject<HTMLDivElement | null>
+  onVoteChange: (storyId: string, vote: VoteView) => void
 }
 
 export function RoomCardDeck({
   roomState,
   participant,
-  onStateChange,
-  deckRef,
+  onVoteChange,
 }: RoomCardDeckProps) {
   const { room, activeStory } = roomState
   const deck = getDeckForRoom(room)
@@ -26,12 +24,17 @@ export function RoomCardDeck({
   const myVote = activeStory?.votes.find(
     (v) => v.participantId === participant.id
   )
-  const [selected, setSelected] = useState<string | null>(null)
+  const [optimisticValue, setOptimisticValue] = useState<string | null>(null)
+  const [isOptimistic, setIsOptimistic] = useState(false)
   const [isCasting, setIsCasting] = useState(false)
 
   useEffect(() => {
-    setSelected(myVote?.hasVoted ? (myVote.value ?? null) : null)
-  }, [myVote?.hasVoted, myVote?.value, activeStory?.id])
+    setOptimisticValue(null)
+    setIsOptimistic(false)
+  }, [activeStory?.id])
+
+  const serverSelected = myVote?.hasVoted ? (myVote.value ?? null) : null
+  const selected = isOptimistic ? optimisticValue : serverSelected
 
   const disabled = participant.isSpectator || !isVoting
 
@@ -43,16 +46,25 @@ export function RoomCardDeck({
     setIsCasting(true)
     try {
       if (isClearing) {
-        setSelected(null)
+        setOptimisticValue(null)
+        setIsOptimistic(true)
         await clearMyVote(room.id, activeStory.id)
+        onVoteChange(activeStory.id, {
+          participantId: participant.id,
+          hasVoted: false,
+          value: null,
+        })
       } else {
-        setSelected(value)
-        await castVote(room.id, activeStory.id, value)
+        setOptimisticValue(value)
+        setIsOptimistic(true)
+        const vote = await castVote(room.id, activeStory.id, value)
+        onVoteChange(activeStory.id, vote)
       }
-      onStateChange()
     } catch {
-      setSelected(myVote?.hasVoted ? (myVote.value ?? null) : null)
+      setOptimisticValue(null)
+      setIsOptimistic(false)
     } finally {
+      setIsOptimistic(false)
       setIsCasting(false)
     }
   }
@@ -62,7 +74,7 @@ export function RoomCardDeck({
   }
 
   return (
-    <section ref={deckRef} className="shrink-0 px-4 py-6 sm:px-6">
+    <section className="shrink-0 px-4 py-6 sm:px-6">
       <p className="mb-5 text-center text-sm text-muted-foreground">
         Choose your card
       </p>
@@ -75,7 +87,6 @@ export function RoomCardDeck({
               type="button"
               disabled={disabled || isCasting}
               onClick={() => void handleCardClick(value)}
-              layout
               initial={false}
               animate={{
                 y: isSelected ? -10 : 0,

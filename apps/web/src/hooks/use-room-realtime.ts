@@ -2,10 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { fetchRoomState } from "@/lib/api/room-state"
 import type { RoomState } from "@/lib/api/room-state"
-import { fetchStories } from '@/lib/api/stories';
-import type { Story } from '@/lib/api/stories';
-import { parseRoomRealtimeEvent } from '@/lib/realtime/events';
-import type { RoomRealtimeEvent } from '@/lib/realtime/events';
+import { fetchStories } from "@/lib/api/stories"
+import type { Story } from "@/lib/api/stories"
+import { applyRoomRealtimeEvent } from "@/lib/realtime/apply-event"
+import {
+  isIncrementalRoomEvent,
+  parseRoomRealtimeEvent,
+} from "@/lib/realtime/events"
+import type { RoomRealtimeEvent } from "@/lib/realtime/events"
 import { roomWebSocketUrl } from "@/lib/realtime/ws-url"
 
 const debounceMs = 150
@@ -15,11 +19,16 @@ const maxReconnectDelayMs = 30_000
 type UseRoomRealtimeOptions = {
   enabled?: boolean
   loadStories?: boolean
+  participantId?: string
 }
 
 export function useRoomRealtime(
   roomId: string,
-  { enabled = true, loadStories = true }: UseRoomRealtimeOptions = {}
+  {
+    enabled = true,
+    loadStories = true,
+    participantId,
+  }: UseRoomRealtimeOptions = {}
 ) {
   const [state, setState] = useState<RoomState | null>(null)
   const [stories, setStories] = useState<Array<Story>>([])
@@ -78,7 +87,7 @@ export function useRoomRealtime(
         const shouldRefreshRoomState =
           pending.has("room:updated") ||
           pending.has("participants:updated") ||
-          pending.has("stories:updated")
+          pending.has("voting:revealed")
 
         if (shouldRefreshRoomState) {
           void refreshState().catch((err) => {
@@ -88,7 +97,10 @@ export function useRoomRealtime(
           })
         }
 
-        if (pending.has("stories:updated") && loadStories) {
+        if (
+          (pending.has("stories:updated") || pending.has("voting:revealed")) &&
+          loadStories
+        ) {
           void refreshStories().catch((err) => {
             setError(
               err instanceof Error ? err.message : "Failed to load stories"
@@ -129,9 +141,7 @@ export function useRoomRealtime(
         await refresh()
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load room"
-          )
+          setError(err instanceof Error ? err.message : "Failed to load room")
         }
       } finally {
         if (!cancelled) {
@@ -163,9 +173,33 @@ export function useRoomRealtime(
       socket.addEventListener("message", (message) => {
         if (typeof message.data !== "string") return
         const event = parseRoomRealtimeEvent(message.data)
-        if (event) {
-          scheduleRefresh(event)
+        if (!event) return
+
+        if (isIncrementalRoomEvent(event)) {
+          const isOwnVoteEvent =
+            participantId != null &&
+            (event.type === "vote:cast" || event.type === "vote:cleared") &&
+            event.participantId === participantId
+
+          if (!isOwnVoteEvent) {
+            setState((current) =>
+              current
+                ? applyRoomRealtimeEvent(current, event, participantId)
+                : current
+            )
+          }
+
+          if (event.type === "voting:started" && loadStories) {
+            void refreshStories().catch((err) => {
+              setError(
+                err instanceof Error ? err.message : "Failed to load stories"
+              )
+            })
+          }
+          return
         }
+
+        scheduleRefresh(event)
       })
 
       socket.addEventListener("close", () => {
@@ -206,6 +240,9 @@ export function useRoomRealtime(
   }, [
     clearFallbackPoll,
     enabled,
+    loadStories,
+    participantId,
+    refreshStories,
     roomId,
     scheduleRefresh,
     startFallbackPoll,

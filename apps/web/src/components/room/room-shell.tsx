@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import { AnimatePresence } from "motion/react"
 
 import { InvitePlayersDialog } from "@/components/room/invite-players-dialog"
@@ -9,9 +9,17 @@ import { RoomTable } from "@/components/room/room-table"
 import { RoomTimerExpiredAlert } from "@/components/room/room-timer-expired-alert"
 import { RoomTimerProvider } from "@/components/room/room-timer-context"
 import { VotingResults } from "@/components/room/voting-results"
+import { useRoomPresence } from "@/hooks/use-room-presence"
 import { useRoomRealtime } from "@/hooks/use-room-realtime"
+import { applyOwnVoteUpdate } from "@/lib/realtime/apply-event"
 import type { Participant } from "@/lib/api/participants"
 import type { RoomWithRelations } from "@/lib/api/rooms"
+import {
+  buildRoomWithRelations,
+  patchRoomStateParticipant,
+  patchRoomStateRoom,
+  resolveParticipant,
+} from "@/lib/room/room-view"
 import { Spinner } from "@pointly/ui/components/spinner"
 
 type RoomShellProps = {
@@ -30,15 +38,33 @@ export function RoomShell({
   const [inviteOpen, setInviteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isRevealCountdown, setIsRevealCountdown] = useState(false)
-  const deckRef = useRef<HTMLDivElement>(null)
-  const {
-    state,
-    stories,
-    error,
-    isLoading,
-    isStoriesLoading,
-    refresh,
-  } = useRoomRealtime(room.id, { loadStories: sidebarOpen })
+  const { state, stories, error, isLoading, isStoriesLoading, refresh, setState } =
+    useRoomRealtime(room.id, {
+      loadStories: sidebarOpen,
+      participantId: participant.id,
+    })
+
+  const handleRoomChange = useCallback(
+    (next: RoomWithRelations) => {
+      onRoomChange(next)
+      setState((current) =>
+        current ? patchRoomStateRoom(current, next) : current
+      )
+    },
+    [onRoomChange, setState]
+  )
+
+  const handleParticipantChange = useCallback(
+    (next: Participant) => {
+      onParticipantChange(next)
+      setState((current) =>
+        current ? patchRoomStateParticipant(current, next) : current
+      )
+    },
+    [onParticipantChange, setState]
+  )
+
+  useRoomPresence(room.id, true)
 
   if (isLoading || !state) {
     return (
@@ -58,70 +84,76 @@ export function RoomShell({
     )
   }
 
+  const roomView = buildRoomWithRelations(state, stories)
+  const currentParticipant = resolveParticipant(
+    state.participants,
+    participant.id,
+    participant
+  )
   const isRevealed = state.activeStory?.status === "revealed"
 
   return (
     <RoomTimerProvider
-      roomId={room.id}
+      roomId={roomView.id}
       activeStoryId={state.activeStory?.id ?? null}
     >
       <div className="flex min-h-svh overflow-hidden">
         <InvitePlayersDialog
-          roomId={room.id}
+          roomId={roomView.id}
           open={inviteOpen}
           onOpenChange={setInviteOpen}
         />
         <div className="relative flex min-w-0 flex-1 flex-col">
           <RoomTimerExpiredAlert />
           <RoomHeader
-            room={room}
-            participant={participant}
+            room={roomView}
+            participant={currentParticipant}
             sidebarOpen={sidebarOpen}
             onSidebarToggle={() => setSidebarOpen((open) => !open)}
-            onRoomChange={onRoomChange}
-            onParticipantChange={onParticipantChange}
+            onRoomChange={handleRoomChange}
+            onParticipantChange={handleParticipantChange}
             onRefreshRoomState={() => void refresh()}
             onInviteClick={() => setInviteOpen(true)}
           />
           <div className="flex min-h-0 flex-1 flex-col">
             <RoomTable
               roomState={state}
-              currentParticipant={participant}
+              currentParticipant={currentParticipant}
               onInviteClick={() => setInviteOpen(true)}
               onStateChange={() => void refresh()}
-              onFocusDeck={() =>
-                deckRef.current?.scrollIntoView({ behavior: "smooth" })
-              }
               onRevealCountdownChange={setIsRevealCountdown}
             />
             {isRevealed && state.activeStory ? (
               <VotingResults
                 votes={state.activeStory.votes}
-                showAverage={state.room.showAverage}
+                showAverage={roomView.showAverage}
               />
             ) : !isRevealCountdown ? (
               <RoomCardDeck
                 roomState={state}
-                participant={participant}
-                onStateChange={() => void refresh()}
-                deckRef={deckRef}
+                participant={currentParticipant}
+                onVoteChange={(storyId, vote) => {
+                  setState((current) =>
+                    current ? applyOwnVoteUpdate(current, storyId, vote) : current
+                  )
+                }}
               />
             ) : null}
           </div>
         </div>
         <AnimatePresence initial={false}>
-          {sidebarOpen ?
+          {sidebarOpen ? (
             <RoomStoriesSidebar
               key="room-stories-sidebar"
-              room={state.room}
-              participant={participant}
+              room={roomView}
+              participant={currentParticipant}
               stories={stories}
               isLoading={isStoriesLoading}
               error={error}
               onClose={() => setSidebarOpen(false)}
               onStoriesChange={() => void refresh()}
             />
-          : null}
+          ) : null}
         </AnimatePresence>
       </div>
     </RoomTimerProvider>

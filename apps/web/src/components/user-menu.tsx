@@ -14,6 +14,7 @@ import { useTheme } from "@lonik/themer"
 
 import { useAuthDialog } from "@/components/auth/auth-dialog-provider"
 import { EditProfileDialog } from "@/components/edit-profile-dialog"
+import { leaveRoomNow } from "@/lib/room/disconnect-leave"
 import { updateMyParticipant } from "@/lib/api/participants"
 import type { Participant } from "@/lib/api/participants"
 import { authClient } from "@/lib/auth-client"
@@ -98,6 +99,9 @@ export function UserMenu({
   }
 
   async function handleSignOut() {
+    if (roomId) {
+      await leaveRoomNow(roomId).catch(() => undefined)
+    }
     await authClient.signOut()
     await navigate({ to: "/" })
   }

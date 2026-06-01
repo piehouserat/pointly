@@ -13,9 +13,9 @@ export function RoomPreview({ room }: RoomPreviewProps) {
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
         <Link to="/" className="shrink-0" tabIndex={-1}>
           <img
-            src="/pointly-logo-primary.svg"
+            src="/pointly-logo-header.svg"
             alt=""
-            className="h-8 w-auto object-contain dark:brightness-0 dark:invert"
+            className="h-8 w-auto object-contain"
           />
         </Link>
         <span className="truncate font-semibold">{room.name}</span>

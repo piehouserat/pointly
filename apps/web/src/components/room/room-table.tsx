@@ -9,6 +9,7 @@ import {
 import type { Participant } from "@/lib/api/participants"
 import type { ActiveStory, RoomState } from "@/lib/api/room-state"
 import { revealCards, startVoting } from "@/lib/api/room-state"
+import { canRevealCards } from "@/lib/room/permissions"
 import { Button } from "@pointly/ui/components/button"
 import { Spinner } from "@pointly/ui/components/spinner"
 import { cn } from "@pointly/ui/lib/utils"
@@ -18,7 +19,6 @@ type RoomTableProps = {
   currentParticipant: Participant
   onInviteClick: () => void
   onStateChange: () => void
-  onFocusDeck?: () => void
   onRevealCountdownChange?: (active: boolean) => void
 }
 
@@ -31,18 +31,19 @@ export function RoomTable({
   currentParticipant,
   onInviteClick,
   onStateChange,
-  onFocusDeck,
   onRevealCountdownChange,
 }: RoomTableProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
 
-  const { room, participants, activeStory, canReveal } = roomState
+  const { room, participants, activeStory } = roomState
   const voters = participants.filter((p) => !p.isSpectator)
   const isLonely = voters.length <= 1
   const isRevealed = activeStory?.status === "revealed"
   const isVoting = activeStory?.status === "voting"
+  const canReveal =
+    isVoting && canRevealCards(room, currentParticipant)
   const isCountingDown = countdown !== null
   const splitIndex = Math.ceil(voters.length / 2)
   const topVoters = voters.slice(0, splitIndex)
@@ -99,11 +100,6 @@ export function RoomTable({
             vote={voteByParticipant(activeStory, p.id)}
             isMe={p.id === currentParticipant.id}
             isRevealed={isRevealed}
-            onChangeMyCard={
-              p.id === currentParticipant.id && isVoting && !isCountingDown
-                ? onFocusDeck
-                : undefined
-            }
           />
         ))}
       </ul>

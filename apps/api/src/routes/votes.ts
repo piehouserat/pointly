@@ -8,8 +8,10 @@ import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
 import { requireRoomParticipant } from "@/lib/participant"
 import {
-  notifyRoomAndStories,
-  notifyRoomState,
+  notifyStories,
+  notifyVoteCast,
+  notifyVoteCleared,
+  notifyVotingRevealed,
 } from "@/lib/realtime/notify"
 import { maybeAutoReveal } from "@/lib/voting"
 import type { AppEnv } from "@/types"
@@ -87,9 +89,20 @@ const app = new Hono<AppEnv>()
 
     const revealed = await maybeAutoReveal(db, roomId, storyId)
     if (revealed) {
-      await notifyRoomAndStories(c.env, roomId)
+      const [revealedStory] = await db
+        .select()
+        .from(stories)
+        .where(eq(stories.id, storyId))
+        .limit(1)
+      await notifyVotingRevealed(
+        c.env,
+        roomId,
+        storyId,
+        revealedStory?.finalEstimate ?? null
+      )
+      await notifyStories(c.env, roomId)
     } else {
-      await notifyRoomState(c.env, roomId)
+      await notifyVoteCast(c.env, roomId, storyId, vote.participantId)
     }
 
     return c.json(
@@ -134,7 +147,9 @@ const app = new Hono<AppEnv>()
     }
 
     if (existing.participantId !== participant.id) {
-      throw new HTTPException(403, { message: "You can only update your own vote" })
+      throw new HTTPException(403, {
+        message: "You can only update your own vote",
+      })
     }
 
     const [vote] = await db
@@ -145,9 +160,20 @@ const app = new Hono<AppEnv>()
 
     const revealed = await maybeAutoReveal(db, roomId, storyId)
     if (revealed) {
-      await notifyRoomAndStories(c.env, roomId)
+      const [revealedStory] = await db
+        .select()
+        .from(stories)
+        .where(eq(stories.id, storyId))
+        .limit(1)
+      await notifyVotingRevealed(
+        c.env,
+        roomId,
+        storyId,
+        revealedStory?.finalEstimate ?? null
+      )
+      await notifyStories(c.env, roomId)
     } else {
-      await notifyRoomState(c.env, roomId)
+      await notifyVoteCast(c.env, roomId, storyId, vote.participantId)
     }
 
     return c.json({
@@ -179,13 +205,10 @@ const app = new Hono<AppEnv>()
     await db
       .delete(votes)
       .where(
-        and(
-          eq(votes.storyId, storyId),
-          eq(votes.participantId, participant.id)
-        )
+        and(eq(votes.storyId, storyId), eq(votes.participantId, participant.id))
       )
 
-    await notifyRoomState(c.env, roomId)
+    await notifyVoteCleared(c.env, roomId, storyId, participant.id)
 
     return c.body(null, 204)
   })
@@ -221,12 +244,14 @@ const app = new Hono<AppEnv>()
     }
 
     if (existing.participantId !== participant.id) {
-      throw new HTTPException(403, { message: "You can only delete your own vote" })
+      throw new HTTPException(403, {
+        message: "You can only delete your own vote",
+      })
     }
 
     await db.delete(votes).where(eq(votes.id, voteId))
 
-    await notifyRoomState(c.env, roomId)
+    await notifyVoteCleared(c.env, roomId, storyId, participant.id)
 
     return c.body(null, 204)
   })

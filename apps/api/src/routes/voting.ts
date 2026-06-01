@@ -8,7 +8,7 @@ import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
 import { requireRoomParticipant } from "@/lib/participant"
-import { notifyRoomAndStories } from "@/lib/realtime/notify"
+import { notifyStories, notifyVotingRevealed, notifyVotingStarted } from "@/lib/realtime/notify"
 import { canReveal, getActiveStory, revealStory } from "@/lib/voting"
 import type { AppEnv } from "@/types"
 
@@ -25,7 +25,9 @@ const app = new Hono<AppEnv>()
     const actor = await requireRoomParticipant(c, roomId)
 
     if (!actor.isHost) {
-      throw new HTTPException(403, { message: "Only the host can start voting" })
+      throw new HTTPException(403, {
+        message: "Only the host can start voting",
+      })
     }
 
     const [room] = await db
@@ -71,7 +73,11 @@ const app = new Hono<AppEnv>()
         .where(eq(stories.id, target.id))
         .returning()
 
-      await notifyRoomAndStories(c.env, roomId)
+      await notifyVotingStarted(c.env, roomId, {
+        id: story.id,
+        title: story.title,
+      })
+      await notifyStories(c.env, roomId)
 
       return c.json(story)
     }
@@ -96,7 +102,11 @@ const app = new Hono<AppEnv>()
       })
       .returning()
 
-    await notifyRoomAndStories(c.env, roomId)
+    await notifyVotingStarted(c.env, roomId, {
+      id: story.id,
+      title: story.title,
+    })
+    await notifyStories(c.env, roomId)
 
     return c.json(story, 201)
   })
@@ -126,7 +136,8 @@ const app = new Hono<AppEnv>()
 
     const story = await revealStory(db, activeStory.id)
 
-    await notifyRoomAndStories(c.env, roomId)
+    await notifyVotingRevealed(c.env, roomId, story.id, story.finalEstimate)
+    await notifyStories(c.env, roomId)
 
     return c.json(story)
   })

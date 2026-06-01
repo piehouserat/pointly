@@ -86,13 +86,10 @@ export async function castVote(
   storyId: string,
   value: string
 ): Promise<VoteView> {
-  const response = await apiFetch(
-    `/rooms/${roomId}/stories/${storyId}/votes`,
-    {
-      method: "POST",
-      body: JSON.stringify({ value }),
-    }
-  )
+  const response = await apiFetch(`/rooms/${roomId}/stories/${storyId}/votes`, {
+    method: "POST",
+    body: JSON.stringify({ value }),
+  })
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
@@ -103,7 +100,6 @@ export async function castVote(
 
   return response.json() as Promise<VoteView>
 }
-
 export async function clearMyVote(
   roomId: string,
   storyId: string

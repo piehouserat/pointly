@@ -5,7 +5,7 @@ import { Hono } from "hono"
 import { getDb } from "@/lib/db"
 import { notFound } from "@/lib/errors"
 import { param } from "@/lib/params"
-import { notifyRoomState } from "@/lib/realtime/notify"
+import { notifyParticipants } from "@/lib/realtime/notify"
 import { requireRoomParticipant } from "@/lib/participant"
 import type { AppEnv } from "@/types"
 import { createParticipantSchema, updateParticipantSchema } from "@/validators"
@@ -40,7 +40,7 @@ const app = new Hono<AppEnv>()
       .where(eq(participants.id, existing.id))
       .returning()
 
-    await notifyRoomState(c.env, roomId)
+    await notifyParticipants(c.env, roomId)
 
     return c.json(participant)
   })
@@ -51,7 +51,7 @@ const app = new Hono<AppEnv>()
 
     await db.delete(participants).where(eq(participants.id, existing.id))
 
-    await notifyRoomState(c.env, roomId)
+    await notifyParticipants(c.env, roomId)
 
     return c.body(null, 204)
   })
@@ -103,7 +103,7 @@ const app = new Hono<AppEnv>()
       })
       .returning()
 
-    await notifyRoomState(c.env, roomId)
+    await notifyParticipants(c.env, roomId)
 
     return c.json(participant, 201)
   })
